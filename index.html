@@ -7,11 +7,57 @@
 <link rel="manifest" href="manifest.json">
 
 <style>
-
 body{
 font-family:Arial;
 padding:20px;
-background:#f9f9f9;
+background:#f4f6fb;
+}
+
+/* HEADER */
+header{
+text-align:center;
+margin-bottom:30px;
+background:linear-gradient(90deg,#1a73e8,#0b4db8);
+color:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 5px 15px rgba(0,0,0,0.2);
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+header .header-left{
+text-align:center;
+flex:1;
+}
+
+header h1{
+margin:0;
+font-size:28px;
+text-transform:uppercase;
+letter-spacing:2px;
+}
+
+header h2{
+margin:5px;
+font-weight:normal;
+text-transform:uppercase;
+}
+
+header p{
+text-transform:uppercase;
+}
+
+/* LANGUAGE BUTTON */
+#langBtn{
+padding:5px 10px;
+font-weight:bold;
+border:none;
+border-radius:4px;
+cursor:pointer;
+background:white;
+color:#1a73e8;
 }
 
 /* MENU */
@@ -22,6 +68,7 @@ cursor:pointer;
 position:fixed;
 top:15px;
 left:15px;
+color:white;
 }
 
 .sidebar{
@@ -34,7 +81,6 @@ background:#1a73e8;
 overflow-x:hidden;
 transition:0.3s;
 padding-top:60px;
-color:white;
 }
 
 .sidebar a{
@@ -46,7 +92,7 @@ font-size:18px;
 }
 
 .sidebar a:hover{
-background:#1557b0;
+background:#0b4db8;
 }
 
 .closebtn{
@@ -54,6 +100,7 @@ position:absolute;
 top:10px;
 right:20px;
 font-size:30px;
+color:white;
 cursor:pointer;
 }
 
@@ -74,33 +121,13 @@ height:120px;
 margin-top:10px;
 }
 
-input[type=file]{
-margin-top:10px;
-}
-
 button{
-margin-top:15px;
+margin-top:10px;
 padding:10px 15px;
 background:#1a73e8;
 color:white;
 border:none;
 cursor:pointer;
-}
-
-/* HEADER */
-
-header{
-text-align:center;
-margin-bottom:30px;
-}
-
-header h1{
-color:#1a73e8;
-font-size:2.5em;
-}
-
-header h2{
-color:#555;
 }
 
 /* BELL */
@@ -114,7 +141,6 @@ background:#ffcc00;
 padding:15px;
 border-radius:6px;
 font-weight:bold;
-box-shadow:0 0 10px rgba(0,0,0,0.3);
 }
 
 /* TABLE */
@@ -173,10 +199,16 @@ padding:4px;
 
 <div id="bellNotice">🔔 Kipindi Kimeanza</div>
 
+<!-- HEADER WITH LANGUAGE SWITCH -->
 <header>
+<div class="header-left">
 <h1>Nguliguli Secondary School</h1>
 <h2>Ratiba ya Vipindi</h2>
-<p>Form One hadi Form Four</p>
+<p id="headerForm">Form One hadi Form Four</p>
+</div>
+<div>
+<button id="langBtn" onclick="toggleLanguage()">SW</button>
+</div>
 </header>
 
 <!-- OFFICES -->
@@ -185,7 +217,6 @@ padding:4px;
 <h3>Office ya Mkuu wa Shule</h3>
 <textarea placeholder="Andika tangazo"></textarea>
 <br>
-Upload PDF:
 <input type="file" accept="application/pdf">
 <br>
 <button onclick="closeOffice()">Back</button>
@@ -196,14 +227,10 @@ Upload PDF:
 <h3>Office ya Academic</h3>
 
 <textarea placeholder="Andika tangazo"></textarea>
-
 <br>
-
-Upload PDF:
 <input type="file" accept="application/pdf">
 
 <h3>Report ya Masomo</h3>
-
 <button onclick="generateReport()">Angalia Report</button>
 
 <table id="reportTable">
@@ -213,16 +240,13 @@ Upload PDF:
 </tr>
 </table>
 
-<br>
 <button onclick="closeOffice()">Back</button>
 
 </div>
 
 <div id="sports" class="office">
 <h3>Office ya Michezo</h3>
-<textarea placeholder="Andika tangazo"></textarea>
-<br>
-Upload PDF:
+<textarea></textarea>
 <input type="file" accept="application/pdf">
 <br>
 <button onclick="closeOffice()">Back</button>
@@ -230,9 +254,7 @@ Upload PDF:
 
 <div id="discipline" class="office">
 <h3>Office ya Nidhamu</h3>
-<textarea placeholder="Andika tangazo"></textarea>
-<br>
-Upload PDF:
+<textarea></textarea>
 <input type="file" accept="application/pdf">
 <br>
 <button onclick="closeOffice()">Back</button>
@@ -253,68 +275,114 @@ document.getElementById("menu").style.width="0";
 /* OFFICE */
 
 function showOffice(id){
-
-document.querySelectorAll('.office').forEach(o=>{
-o.style.display="none";
-});
-
+document.querySelectorAll('.office').forEach(o=>o.style.display="none");
 document.getElementById(id).style.display="block";
-
-window.scrollTo(0,0);
-
 }
 
 function closeOffice(){
+document.querySelectorAll('.office').forEach(o=>o.style.display="none");
+}
 
-document.querySelectorAll('.office').forEach(o=>{
-o.style.display="none";
-});
-
+/* LANGUAGE SWITCH */
+let lang='sw';
+function toggleLanguage(){
+if(lang==='sw'){
+lang='eng';
+document.getElementById('langBtn').innerText='ENG';
+document.getElementById('notificationText').innerText="Period started – Please select subject, teacher, and time for each period";
+document.getElementById('headerForm').innerText="Form One to Form Four";
+}else{
+lang='sw';
+document.getElementById('langBtn').innerText='SW';
+document.getElementById('notificationText').innerText="Kipindi kimeanza – Tafadhali chagua somo, mwalimu, na muda kila kipindi";
+document.getElementById('headerForm').innerText="Form One hadi Form Four";
+}
 }
 
 /* WALIMU */
 
 const walimu=[
-"Denis Maige",
-"Damiani Lushinge",
-"Omari Mniru",
-"Mario Maketa",
-"Method Maginga",
-"Samwel Msabila",
-"Mwansiti Mbwana",
-"Agness Tarence",
-"Joyce Makoli",
-"Nicholous Godfrey",
-"Petro Benjamin",
-"Kinunda Godfrid",
-"Baraka John"
+"Denis Maige","Damiani Lushinge","Omari Mniru","Mario Maketa",
+"Method Maginga","Samwel Msabila","Mwansiti Mbwana",
+"Agness Tarence","Joyce Makoli","Nicholous Godfrey",
+"Petro Benjamin","Kinunda Godfrid","Baraka John"
 ];
 
 /* MASOMO */
 
 const masomo=[
-"Physics",
-"History",
-"Biology",
-"Mathematics",
-"Business Studies",
-"Chemistry",
-"English Language",
-"English Literature",
-"Civics",
-"Geography",
-"Kiswahili"
+"Physics","History","Biology","Mathematics","Business Studies",
+"Chemistry","English Language","English Literature",
+"Civics","Geography","Kiswahili"
 ];
+
+/* LOCAL STORAGE SAVE */
+
+function saveData(){
+
+let data=[];
+
+document.querySelectorAll("table tr").forEach(row=>{
+
+let subject=row.querySelector(".subject select");
+let teacher=row.querySelector(".teacher select");
+let time=row.querySelector("input[type=time]");
+let students=row.querySelector("input[type=number]");
+
+if(subject){
+
+data.push({
+subject:subject.value,
+teacher:teacher.value,
+time:time.value,
+students:students.value
+});
+
+}
+
+});
+
+localStorage.setItem("ratiba",JSON.stringify(data));
+
+}
+
+/* LOAD DATA */
+
+function loadData(){
+
+let data=JSON.parse(localStorage.getItem("ratiba")||"[]");
+
+let i=0;
+
+document.querySelectorAll("table tr").forEach(row=>{
+
+let subject=row.querySelector(".subject select");
+let teacher=row.querySelector(".teacher select");
+let time=row.querySelector("input[type=time]");
+let students=row.querySelector("input[type=number]");
+
+if(subject && data[i]){
+
+subject.value=data[i].subject;
+teacher.value=data[i].teacher;
+time.value=data[i].time;
+students.value=data[i].students;
+
+i++;
+
+}
+
+});
+
+}
 
 /* DROPDOWN */
 
 function dropdown(list,title){
 
-let html=`<select><option>${title}</option>`;
+let html=`<select onchange="saveData()"><option>${title}</option>`;
 
-list.forEach(i=>{
-html+=`<option>${i}</option>`;
-});
+list.forEach(i=>html+=`<option>${i}</option>`);
 
 html+="</select>";
 
@@ -333,8 +401,6 @@ td.innerHTML=dropdown(walimu,"Chagua Mwalimu");
 });
 
 }
-
-window.onload=addDropdowns;
 
 /* AUTO BELL */
 
@@ -359,9 +425,7 @@ let audio=new Audio("https://actions.google.com/sounds/v1/alarms/school_bell.ogg
 
 audio.play();
 
-setTimeout(()=>{
-bell.style.display="none";
-},10000);
+setTimeout(()=>bell.style.display="none",10000);
 
 }
 
@@ -371,18 +435,15 @@ bell.style.display="none";
 
 setInterval(checkBell,60000);
 
-/* REPORT ACADEMIC */
+/* REPORT */
 
 function generateReport(){
 
 let subjects={};
 
-document.querySelectorAll("table").forEach(table=>{
-
-table.querySelectorAll("tr").forEach(row=>{
+document.querySelectorAll("table tr").forEach(row=>{
 
 let subject=row.querySelector(".subject select");
-
 let students=row.querySelector("input[type=number]");
 
 if(subject && students){
@@ -393,9 +454,7 @@ let num=parseInt(students.value)||0;
 
 if(sub && sub!="Chagua Somo"){
 
-if(!subjects[sub]){
-subjects[sub]=0;
-}
+if(!subjects[sub])subjects[sub]=0;
 
 subjects[sub]+=num;
 
@@ -405,20 +464,13 @@ subjects[sub]+=num;
 
 });
 
-});
-
 let table=document.getElementById("reportTable");
 
 table.innerHTML="<tr><th>Somo</th><th>Jumla ya Wanafunzi</th></tr>";
 
 for(let s in subjects){
 
-table.innerHTML+=`
-<tr>
-<td>${s}</td>
-<td>${subjects[s]}</td>
-</tr>
-`;
+table.innerHTML+=`<tr><td>${s}</td><td>${subjects[s]}</td></tr>`;
 
 }
 
@@ -429,9 +481,7 @@ table.innerHTML+=`
 function generate(formName,schedule,style){
 
 document.write(`<h2>${formName}</h2>
-
 <table class="${style}">
-
 <tr>
 <th>Siku</th>
 <th>Kipindi</th>
@@ -449,19 +499,13 @@ day.periods.forEach((p,i)=>{
 
 document.write("<tr>");
 
-if(i==0){
-document.write(`<td rowspan="${rowspan}">${day.siku}</td>`);
-}
+if(i==0)document.write(`<td rowspan="${rowspan}">${day.siku}</td>`);
 
 document.write(`<td>${p.kipindi}</td>`);
-
 document.write(`<td class="subject"></td>`);
-
-document.write(`<td><input type="time" value="${p.muda}"></td>`);
-
+document.write(`<td><input type="time" value="${p.muda}" onchange="saveData()"></td>`);
 document.write(`<td class="teacher"></td>`);
-
-document.write(`<td><input type="number"></td>`);
+document.write(`<td><input type="number" onchange="saveData()"></td>`);
 
 document.write("</tr>");
 
@@ -475,35 +519,11 @@ document.write("</table>");
 
 const schedule=[
 
-{siku:"Jumatatu",periods:[
-{kipindi:1,muda:"08:00"},
-{kipindi:2,muda:"08:45"},
-{kipindi:3,muda:"09:30"},
-{kipindi:4,muda:"10:15"}]},
-
-{siku:"Jumanne",periods:[
-{kipindi:1,muda:"08:00"},
-{kipindi:2,muda:"08:45"},
-{kipindi:3,muda:"09:30"},
-{kipindi:4,muda:"10:15"}]},
-
-{siku:"Jumatano",periods:[
-{kipindi:1,muda:"08:00"},
-{kipindi:2,muda:"08:45"},
-{kipindi:3,muda:"09:30"},
-{kipindi:4,muda:"10:15"}]},
-
-{siku:"Alhamisi",periods:[
-{kipindi:1,muda:"08:00"},
-{kipindi:2,muda:"08:45"},
-{kipindi:3,muda:"09:30"},
-{kipindi:4,muda:"10:15"}]},
-
-{siku:"Ijumaa",periods:[
-{kipindi:1,muda:"08:00"},
-{kipindi:2,muda:"08:45"},
-{kipindi:3,muda:"09:30"},
-{kipindi:4,muda:"10:15"}]}
+{siku:"Jumatatu",periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]},
+{siku:"Jumanne",periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]},
+{siku:"Jumatano",periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]},
+{siku:"Alhamisi",periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]},
+{siku:"Ijumaa",periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]}
 
 ];
 
@@ -512,7 +532,11 @@ generate("Form Two",schedule,"form2");
 generate("Form Three",schedule,"form3");
 generate("Form Four",schedule,"form4");
 
+setTimeout(loadData,500);
+
+addDropdowns();
+
 </script>
 
 </body>
-                                      </html>
+</html>

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ratiba ya Vipindi – Nguliguli Secondary</title>
 <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#1a73e8">
 
 <style>
 body{
@@ -34,7 +35,7 @@ header .header-left{
 
 header h1{
   margin:0;
-  font-size:4vw; /* responsive size */
+  font-size:4vw;
   text-transform:uppercase;
   letter-spacing:2px;
 }
@@ -252,6 +253,28 @@ Kipindi kimeanza – Tafadhali chagua somo, mwalimu, na muda kila kipindi
 <button onclick="closeOffice()">Back</button>
 </div>
 
+<!-- CHAGUA KIPINDI -->
+<h3>Chagua Kipindi</h3>
+
+<select id="periodSelect" onchange="addPeriod()">
+<option value="">Chagua Kipindi</option>
+<option value="1">Kipindi cha Kwanza</option>
+<option value="2">Kipindi cha Pili</option>
+<option value="3">Kipindi cha Tatu</option>
+<option value="4">Kipindi cha Nne</option>
+<option value="5">Kipindi cha Tano</option>
+</select>
+
+<table id="periodTable" class="form1">
+<tr>
+<th>Kipindi</th>
+<th>Somo</th>
+<th>Muda</th>
+<th>Mwalimu</th>
+<th>Idadi ya Wanafunzi</th>
+</tr>
+</table>
+
 <script>
 /* MENU */
 function openMenu(){document.getElementById("menu").style.width="250px";}
@@ -301,7 +324,7 @@ const masomo=[
 /* LOCAL STORAGE */
 function saveData(){
 let data=[];
-document.querySelectorAll("table tr").forEach(row=>{
+document.querySelectorAll("#periodTable tr").forEach(row=>{
 let subject=row.querySelector(".subject select");
 let teacher=row.querySelector(".teacher select");
 let time=row.querySelector("input[type=time]");
@@ -314,7 +337,7 @@ localStorage.setItem("ratiba",JSON.stringify(data));
 function loadData(){
 let data=JSON.parse(localStorage.getItem("ratiba")||"[]");
 let i=0;
-document.querySelectorAll("table tr").forEach(row=>{
+document.querySelectorAll("#periodTable tr").forEach(row=>{
 let subject=row.querySelector(".subject select");
 let teacher=row.querySelector(".teacher select");
 let time=row.querySelector("input[type=time]");
@@ -357,6 +380,23 @@ setTimeout(()=>bell.style.display="none",10000);
 }
 setInterval(checkBell,60000);
 
+/* ADD PERIOD FUNCTION */
+function addPeriod(){
+let p=document.getElementById("periodSelect").value;
+if(!p) return;
+let table=document.getElementById("periodTable");
+let row=table.insertRow();
+row.innerHTML=`
+<td>${p}</td>
+<td class="subject"></td>
+<td><input type="time" onchange="saveData()"></td>
+<td class="teacher"></td>
+<td><input type="number" onchange="saveData()"></td>
+`;
+addDropdowns();
+saveData();
+}
+
 /* REPORT */
 function generateReport(){
 let subjects={};
@@ -377,51 +417,10 @@ table.innerHTML="<tr><th>Somo</th><th>Jumla ya Wanafunzi</th></tr>";
 for(let s in subjects){table.innerHTML+=`<tr><td>${s}</td><td>${subjects[s]}</td></tr>`;}
 }
 
-/* RATIBA */
-function generate(formName,schedule,style){
-document.write(`<h2>${formName}</h2>
-<table class="${style}">
-<tr>
-<th>Siku</th>
-<th>Kipindi</th>
-<th>Somo</th>
-<th>Muda</th>
-<th>Mwalimu</th>
-<th>Idadi ya Wanafunzi</th>
-</tr>`);
-schedule.forEach(day=>{
-let rowspan=day.periods.length;
-day.periods.forEach((p,i)=>{
-document.write("<tr>");
-if(i==0)document.write(`<td rowspan="${rowspan}">${day.siku}</td>`);
-document.write(`<td>${p.kipindi}</td>`);
-document.write(`<td class="subject"></td>`);
-document.write(`<td><input type="time" value="${p.muda}" onchange="saveData()"></td>`);
-document.write(`<td class="teacher"></td>`);
-document.write(`<td><input type="number" onchange="saveData()"></td>`);
-document.write("</tr>");
-});
-});
-document.write("</table>");
-}
-
-const schedule=[
-{siku:"Jumatatu",periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]},
-{siku:"Jumanne",periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]},
-{siku:"Jumatano",periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]},
-{siku:"Alhamisi",periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]},
-{siku:"Ijumaa",periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]}
-];
-
-generate("Form One",schedule,"form1");
-generate("Form Two",schedule,"form2");
-generate("Form Three",schedule,"form3");
-generate("Form Four",schedule,"form4");
-
 setTimeout(loadData,500);
 addDropdowns();
 
 </script>
 
 </body>
-  </html>
+</html>

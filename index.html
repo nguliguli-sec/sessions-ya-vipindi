@@ -35,6 +35,7 @@ select,input{width:100%;padding:4px;}
 .editBtn{background:#34a853;color:#fff;padding:5px 10px;border-radius:4px;}
 .auth-input{margin:5px 0;padding:8px;width:95%;}
 .auth-btn{margin:5px 0;padding:8px 12px;background:#1a73e8;color:#fff;border:none;border-radius:4px;cursor:pointer;}
+#scheduleContainer h2{margin-top:20px;}
 </style>
 </head>
 <body>
@@ -50,7 +51,6 @@ select,input{width:100%;padding:4px;}
 <div><button id="langBtn" onclick="toggleLanguage()">SW</button></div>
 </header>
 
-<!-- Notification -->
 <div class="notification" id="notificationText">Kipindi kimeanza – Tafadhali chagua somo, mwalimu, na muda kila kipindi</div>
 <div id="bellNotice">🔔 Kipindi Kimeanza</div>
 
@@ -119,6 +119,9 @@ select,input{width:100%;padding:4px;}
   <br><button onclick="closeOffice()">Back</button>
 </div>
 
+<!-- Schedule Container -->
+<div id="scheduleContainer"></div>
+
 <script>
 /* ===== MENU ===== */
 function openMenu(){document.getElementById("menu").style.width="250px";}
@@ -143,19 +146,29 @@ function toggleLanguage(){
 }
 
 /* ===== RESET DATA ===== */
-function resetData(){localStorage.removeItem('guestData'); let currentUser = localStorage.getItem('currentUser'); if(currentUser && currentUser!=='guest'){let accounts=JSON.parse(localStorage.getItem('accounts')||'{}');if(accounts[currentUser]){accounts[currentUser].savedRow=null;localStorage.setItem('accounts',JSON.stringify(accounts));}} location.reload();}
+function resetData(){
+  localStorage.removeItem('guestData'); 
+  let currentUser = localStorage.getItem('currentUser'); 
+  if(currentUser && currentUser!=='guest'){
+    let accounts=JSON.parse(localStorage.getItem('accounts')||'{}');
+    if(accounts[currentUser]){
+      accounts[currentUser].savedRow=null;
+      localStorage.setItem('accounts',JSON.stringify(accounts));
+    }
+  } 
+  location.reload();
+}
 
 /* ===== WALIMU & MASOMO ===== */
 const walimu=["Denis Maige","Damiani Lushinge","Omari Mniru","Mario Maketa","Method Maginga","Samwel Msabila","Mwansiti Mbwana","Agness Tarence","Joyce Makoli","Nicholous Godfrey","Petro Benjamin","Kinunda Godfrid","Baraka John"];
 const masomo=["Physics","History","Biology","Mathematics","Business Studies","Chemistry","English Language","English Literature","Civics","Geography","Kiswahili"];
 
-/* ===== SAVE + EDIT + HIDE OTHERS ===== */
+/* ===== SAVE + EDIT ===== */
 function saveRowAndFilter(button){
   let row = button.closest("tr");
   let subject = row.querySelector(".subject select").value;
   let table = row.closest('table');
   let savedRowData = { tableId: table.className, rowIndex: Array.from(row.parentNode.children).indexOf(row) };
-  
   let currentUser = localStorage.getItem('currentUser');
   if(currentUser === 'guest'){
     localStorage.setItem('guestData', JSON.stringify(savedRowData));
@@ -166,7 +179,6 @@ function saveRowAndFilter(button){
       localStorage.setItem('accounts', JSON.stringify(accounts));
     }
   }
-
   alert("Kipindi cha "+subject+" kimehifadhiwa");
   table.querySelectorAll("tr").forEach(r=>{
     if(r!==row && r.querySelector("td")) r.style.display="none";
@@ -194,7 +206,7 @@ function editRows(button){
   }
 }
 
-/* ===== DROPDOWN ===== */
+/* ===== DROPDOWNS ===== */
 function dropdown(list){return '<select>'+list.map(i=>`<option>${i}</option>`).join('')+'</select>';}
 function addDropdowns(){
   document.querySelectorAll('.subject').forEach(td=>{td.innerHTML=dropdown(masomo);});
@@ -246,26 +258,6 @@ function generateReport(){
   for(let s in subjects){table.innerHTML+='<tr><td>'+s+'</td><td>'+subjects[s]+'</td></tr>';}
 }
 
-/* ===== RATIBA ===== */
-function generate(formName,schedule,style){
-  document.write('<h2>'+formName+'</h2><table class="'+style+'"><tr><th>Siku</th><th>Kipindi</th><th>Somo</th><th>Muda</th><th>Mwalimu</th><th>Edit</th><th>Save</th></tr>');
-  schedule.forEach(day=>{
-    let rowspan=day.periods.length;
-    day.periods.forEach((p,i)=>{
-      document.write("<tr>");
-      if(i==0) document.write('<td rowspan="'+rowspan+'">'+day.siku+'</td>');
-      document.write('<td>'+p.kipindi+'</td>');
-      document.write('<td class="subject"></td>');
-      document.write('<td><input type="time" value="'+p.muda+'"></td>');
-      document.write('<td class="teacher"></td>');
-      document.write('<td><button class="editBtn" onclick="editRows(this)">Edit</button></td>');
-      document.write('<td><button class="saveBtn" onclick="saveRowAndFilter(this)">Save</button></td>');
-      document.write("</tr>");
-    });
-  });
-  document.write("</table>");
-}
-
 /* ===== SCHEDULE DATA ===== */
 const schedule=[
 {siku:"Jumatatu", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]},
@@ -275,14 +267,33 @@ const schedule=[
 {siku:"Ijumaa", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]}
 ];
 
-generate("Form One",schedule,"form1");
-generate("Form Two",schedule,"form2");
-generate("Form Three",schedule,"form3");
-generate("Form Four",schedule,"form4");
-
-/* ===== DROPDOWNS & SAVED ROW PER USER ===== */
-setTimeout(()=>{
+/* ===== GENERATE SCHEDULE ===== */
+function generateSchedule(){
+  const container = document.getElementById('scheduleContainer');
+  ['Form One','Form Two','Form Three','Form Four'].forEach((form,i)=>{
+    let style = 'form'+(i+1);
+    let html = '<h2>'+form+'</h2><table class="'+style+'"><tr><th>Siku</th><th>Kipindi</th><th>Somo</th><th>Muda</th><th>Mwalimu</th><th>Edit</th><th>Save</th></tr>';
+    schedule.forEach(day=>{
+      day.periods.forEach((p,i)=>{
+        html += "<tr>";
+        if(i==0) html += '<td rowspan="'+day.periods.length+'">'+day.siku+'</td>';
+        html += '<td>'+p.kipindi+'</td>';
+        html += '<td class="subject"></td>';
+        html += '<td><input type="time" value="'+p.muda+'"></td>';
+        html += '<td class="teacher"></td>';
+        html += '<td><button class="editBtn" onclick="editRows(this)">Edit</button></td>';
+        html += '<td><button class="saveBtn" onclick="saveRowAndFilter(this)">Save</button></td>';
+        html += "</tr>";
+      });
+    });
+    html += "</table>";
+    container.innerHTML += html;
+  });
   addDropdowns();
+}
+
+/* ===== RESTORE SAVED ROW ===== */
+function restoreSavedRow(){
   let currentUser = localStorage.getItem('currentUser');
   if(currentUser){
     let accounts = JSON.parse(localStorage.getItem('accounts')||'{}');
@@ -298,9 +309,9 @@ setTimeout(()=>{
       }
     }
   }
-},500);
+}
 
-/* ===== AUTH FUNCTIONS – FINAL SNIPPET ===== */
+/* ===== AUTH FUNCTIONS ===== */
 function continueAsGuest(){
     localStorage.setItem('currentUser','guest');
     document.getElementById('authScreen').style.display='none';

@@ -11,13 +11,10 @@ input,select,button{padding:10px;margin:5px 0;width:100%;}
 button{cursor:pointer;background:#1e88e5;color:#fff;border:none;border-radius:6px;}
 nav{display:flex;justify-content:space-between;align-items:center;background:#0d47a1;color:#fff;padding:10px;flex-wrap:wrap;}
 .big{text-transform:uppercase;font-weight:bold;text-align:center;}
-.school-wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .school-title{font-weight:bold;text-transform:uppercase;cursor:pointer;}
-.school-input{display:none;padding:5px;}.grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:10px; } .cell{ background:#fff; min-height:80px; padding:6px; border-radius:8px; font-size:12px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.08); position:relative; } .cell b{display:block;font-size:11px;} .cell.active{background:#c8f7c5;}
+.school-input{display:none;padding:5px;}.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px;} .cell{background:#fff;min-height:80px;padding:6px;border-radius:8px;font-size:12px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,0.08);} .cell.active{background:#c8f7c5;}
 
-.selected-item{ background:#fff; padding:8px; margin:6px 0; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.08); font-size:13px; }
-
-.smallbtn{padding:6px 10px;margin:2px;width:auto;}
+.selected-item{background:#fff;padding:8px;margin:6px 0;border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,0.08);font-size:13px;}
 
 </style>
 </head>
@@ -25,8 +22,8 @@ nav{display:flex;justify-content:space-between;align-items:center;background:#0d
 <h2 class="big">ACCOUNT</h2>
 <input id="user" placeholder="Username" />
 <input id="pass" type="password" placeholder="Password" />
-<button onclick="login()">Login</button>
 <button onclick="register()">Register</button>
+<button onclick="login()">Login</button>
 </div><!-- APP --><div id="app" class="hidden"><nav>
 <div>
 <span id="schoolName" class="school-title" onclick="editSchool()">NGULIGULI SECONDARY</span>
@@ -34,10 +31,10 @@ nav{display:flex;justify-content:space-between;align-items:center;background:#0d
 </div>
 <div><button onclick="logout()">Logout</button></div>
 </nav><div class="container">
-<h3 class="big">RATIBA YANGU</h3><!-- SELECTED --><div class="card">
+<h3 class="big">RATIBA YANGU</h3><div class="card">
 <h4>Selected Periods</h4>
 <div id="selectedList">Hakuna kipindi</div>
-</div><!-- FORM --><div class="card">
+</div><div class="card">
 <h4>Weka Ratiba</h4>
 <select id="form"><option>Form 1</option><option>Form 2</option><option>Form 3</option><option>Form 4</option></select>
 <select id="day"><option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option></select>
@@ -54,8 +51,22 @@ const periods=["Period 1","Period 2","Period 3","Period 4"];
 
 function $(id){return document.getElementById(id);}
 
-function register(){let u=$('user').value,p=$('pass').value;if(!u||!p)return;localStorage.setItem('u_'+u,JSON.stringify({user:u,pass:p}));alert('Registered');}
-function login(){let u=$('user').value,p=$('pass').value;let d=JSON.parse(localStorage.getItem('u_'+u));if(d&&d.pass===p){currentUser=u;sessionStorage.setItem('active',u);startApp();}else alert('Wrong login');}
+/* DEVICE LIMIT REGISTRATION */
+function register(){
+let u=$('user').value,p=$('pass').value;
+if(!u||!p)return;
+if(localStorage.getItem('device_user')){alert('Device tayari ina account moja');return;}
+localStorage.setItem('device_user',u);
+localStorage.setItem('u_'+u,JSON.stringify({user:u,pass:p}));
+alert('Registered');
+}
+
+function login(){
+let u=$('user').value,p=$('pass').value;
+let d=JSON.parse(localStorage.getItem('u_'+u));
+if(d&&d.pass===p){currentUser=u;sessionStorage.setItem('active',u);startApp();}else alert('Wrong login');
+}
+
 window.onload=function(){let a=sessionStorage.getItem('active');if(a){currentUser=a;startApp();}}
 
 function startApp(){
@@ -65,14 +76,24 @@ renderGrid();renderSelected();loadSchool();}
 
 function logout(){sessionStorage.clear();location.reload();}
 
+/* SAVE */
 function saveTimetable(){
 let key=$('day').value+'_'+$('period').value;
-let obj={form:$('form').value,day:$('day').value,period:$('period').value,time:$('time').value,subject:$('subject').value,teacher:$('teacher').value};
+let obj={
+key:key,
+form:$('form').value,
+day:$('day').value,
+period:$('period').value,
+time:$('time').value,
+subject:$('subject').value,
+teacher:$('teacher').value
+};
 localStorage.setItem(currentUser+'_tt_'+key,JSON.stringify(obj));
 addSelected(obj);
 renderGrid();playSound();
 }
 
+/* SELECTED */
 function addSelected(obj){
 let list=JSON.parse(localStorage.getItem(currentUser+'_selected')||'[]');
 list.push(obj);
@@ -86,8 +107,8 @@ if(list.length===0){$('selectedList').innerHTML='Hakuna kipindi';return;}
 let html='';
 list.forEach((a,i)=>{
 html+=`<div class='selected-item'>
-<b>${a.day} | ${a.period}</b><br>
-${a.subject} - ${a.teacher} (${a.time||'no time'})
+<b>${a.form} | ${a.day} | ${a.period}</b><br>
+${a.subject} - ${a.teacher} (${a.time||'no time'})<br>
 <button onclick="editSelected(${i})">Edit</button>
 <button onclick="deleteSelected(${i})">Delete</button>
 </div>`;
@@ -98,16 +119,29 @@ $('selectedList').innerHTML=html;
 function editSelected(i){
 let list=JSON.parse(localStorage.getItem(currentUser+'_selected'));
 let a=list[i];
-$('form').value=a.form;$('day').value=a.day;$('period').value=a.period;$('time').value=a.time;$('subject').value=a.subject;$('teacher').value=a.teacher;
+$('form').value=a.form;
+$('day').value=a.day;
+$('period').value=a.period;
+$('time').value=a.time;
+$('subject').value=a.subject;
+$('teacher').value=a.teacher;
 }
 
+/* DELETE WITH CONFIRM + SYNC GRID */
 function deleteSelected(i){
+if(!confirm('Una uhakika unataka kufuta hii ratiba?'))return;
 let list=JSON.parse(localStorage.getItem(currentUser+'_selected'));
+let item=list[i];
+if(item&&item.key){
+localStorage.removeItem(currentUser+'_tt_'+item.key);
+}
 list.splice(i,1);
 localStorage.setItem(currentUser+'_selected',JSON.stringify(list));
 renderSelected();
+renderGrid();
 }
 
+/* GRID */
 function renderGrid(){
 let html='';
 for(let p=0;p<periods.length;p++){
@@ -115,7 +149,7 @@ for(let d=0;d<days.length;d++){
 let key=days[d]+'_'+periods[p];
 let data=JSON.parse(localStorage.getItem(currentUser+'_tt_'+key)||'null');
 html+=`<div class='cell ${data?'active':''}' onclick="loadCell('${days[d]}','${periods[p]}')">
-<b>${days[d]}</b>${periods[p]}<br>${data?data.subject+' - '+data.teacher:'Empty'}</div>`;
+<b>${days[d]}</b><br>${periods[p]}<br>${data?data.subject+' - '+data.teacher:'Empty'}</div>`;
 }
 }
 $('grid').innerHTML=html;
@@ -127,23 +161,23 @@ $('day').value=day;$('period').value=period;
 if(data){$('subject').value=data.subject;$('teacher').value=data.teacher;$('time').value=data.time;}else{$('subject').value='';$('teacher').value='';$('time').value='';}
 }
 
+/* SCHOOL */
 function editSchool(){
 $('schoolInput').style.display='block';
 $('schoolInput').value=$('schoolName').innerText;
 }
-
 function saveSchool(){
 let v=$('schoolInput').value.toUpperCase();
 $('schoolName').innerText=v;
 $('schoolInput').style.display='none';
 localStorage.setItem(currentUser+'_school',v);
 }
-
 function loadSchool(){
 let sc=localStorage.getItem(currentUser+'_school');
 if(sc)$('schoolName').innerText=sc;
 }
 
 function playSound(){try{let a=new Audio('notify.mp3');a.volume=1;a.play();}catch(e){}}
+
 </script></body>
-  </html>
+</html>

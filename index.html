@@ -3,30 +3,33 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nguliguli Secondary System</title>
+<title>Ratiba ya Vipindi – Nguliguli Secondary</title>
 
 <style>
-body{font-family:Arial;margin:0;background:#f4f6fb;}
+body{font-family:Arial,sans-serif;margin:0;background:#f4f6fb;}
 
 header{
-background:#1a73e8;color:white;padding:15px;text-align:center;
+background:linear-gradient(90deg,#1a73e8,#0b4db8);
+color:white;padding:15px;text-align:center;
 }
 
-.card{background:white;margin:10px;padding:10px;border-radius:6px;}
+.office{display:none;background:white;padding:15px;margin:10px;border-radius:6px;}
 
-input,button,select{
-padding:8px;margin:5px;width:95%;
+.auth-input{margin:5px 0;padding:8px;width:95%;}
+.auth-btn{padding:8px 12px;background:#1a73e8;color:#fff;border:none;margin:5px;}
+
+table{border-collapse:collapse;width:100%;}
+th,td{border:1px solid #999;padding:8px;font-size:12px;}
+th{color:white;}
+
+.form1 th{background:#1a73e8;}
+.form2 th{background:#d93025;}
+.form3 th{background:#188038;}
+.form4 th{background:#f9ab00;}
+
+.uploadBox{
+background:#fff;padding:10px;margin:10px;border-radius:6px;
 }
-
-button{
-background:#1a73e8;color:white;border:none;cursor:pointer;
-}
-
-table{width:100%;border-collapse:collapse;margin-top:10px;}
-th,td{border:1px solid #999;padding:6px;font-size:12px;}
-th{background:#1a73e8;color:white;}
-
-.hidden{display:none;}
 </style>
 </head>
 
@@ -34,39 +37,43 @@ th{background:#1a73e8;color:white;}
 
 <header>
 <h2>Nguliguli Secondary School</h2>
-<p>Smart School System</p>
+<p>Ratiba ya Vipindi</p>
 </header>
 
-<!-- AUTH -->
-<div id="auth" class="card">
-<h3>Login / Register</h3>
-<input id="user" placeholder="Username">
-<input id="pass" type="password" placeholder="Password">
-
-<button onclick="register()">Register</button>
-<button onclick="login()">Login</button>
+<!-- LOGIN -->
+<div id="authScreen" class="office" style="display:block;">
+<h3>Login</h3>
+<input id="username" class="auth-input" placeholder="Username">
+<input id="password" type="password" class="auth-input" placeholder="Password">
+<button class="auth-btn" onclick="signIn()">Login</button>
+<button class="auth-btn" onclick="continueAsGuest()">Guest</button>
 </div>
 
-<!-- PANEL INFO -->
-<div id="panelInfo" class="card hidden">
-<h3>Panel: <span id="roleText"></span></h3>
-<h4>User: <span id="me"></span></h4>
-<button onclick="logout()">Logout</button>
+<!-- UPLOAD SECTION -->
+<div id="uploadBox" class="office">
+
+<div class="uploadBox">
+<h3>Upload Scheme of Work (PDF)</h3>
+<input type="file" accept="application/pdf" onchange="saveFile(this,'scheme')">
 </div>
 
-<!-- UPLOAD -->
-<div id="uploads" class="card hidden">
-<h3>Scheme of Work (PDF)</h3>
-<input type="file" accept="application/pdf" onchange="uploadPDF(this,'scheme')">
+<div class="uploadBox">
+<h3>Upload Lesson Plan (PDF)</h3>
+<input type="file" accept="application/pdf" onchange="saveFile(this,'lesson')">
+</div>
 
-<h3>Lesson Plan (PDF)</h3>
-<input type="file" accept="application/pdf" onchange="uploadPDF(this,'lesson')">
 </div>
 
 <!-- SCHEDULE -->
-<div id="schedule"></div>
+<div id="scheduleContainer"></div>
 
 <script>
+
+/* ===== USERS ===== */
+let users={
+"admin":"1234",
+"teacher":"1111"
+};
 
 /* ===== DATA ===== */
 const walimu=[
@@ -77,180 +84,97 @@ const walimu=[
 
 const masomo=[
 "Physics","History","Biology","Mathematics","Business Studies","Chemistry",
-"English","Civics","Geography","Kiswahili"
+"English Language","English Literature","Civics","Geography","Kiswahili"
 ];
 
-/* FORM 1 - 4 */
-const baseSchedule=[
-{day:"Jumatatu",time:["08:00","08:45","09:30"]},
-{day:"Jumanne",time:["08:00","08:45","09:30"]},
-{day:"Jumatano",time:["08:00","08:45","09:30"]},
-{day:"Alhamisi",time:["08:00","08:45","09:30"]},
-{day:"Ijumaa",time:["08:00","08:45","09:30"]}
+const schedule=[
+{ siku:"Jumatatu", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"},{kipindi:5,muda:"11:00"},{kipindi:6,muda:"11:45"}]},
+{ siku:"Jumanne", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"},{kipindi:5,muda:"11:00"},{kipindi:6,muda:"11:45"}]},
+{ siku:"Jumatano", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"},{kipindi:5,muda:"11:00"},{kipindi:6,muda:"11:45"}]},
+{ siku:"Alhamisi", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"},{kipindi:5,muda:"11:00"},{kipindi:6,muda:"11:45"}]},
+{ siku:"Ijumaa", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"},{kipindi:5,muda:"11:00"},{kipindi:6,muda:"11:45"}]}
 ];
-
-/* ===== USERS ===== */
-function getUsers(){
-return JSON.parse(localStorage.getItem("users")||"{}");
-}
-function saveUsers(u){
-localStorage.setItem("users",JSON.stringify(u));
-}
-
-let currentUser=null;
-let role=null;
-
-/* ===== REGISTER ===== */
-function register(){
-let u=user.value,p=pass.value;
-if(!u||!p)return alert("Fill all");
-
-let users=getUsers();
-if(users[u])return alert("User exists");
-
-users[u]={pass:p,role:"student"};
-saveUsers(users);
-
-alert("Registered as student");
-}
 
 /* ===== LOGIN ===== */
-function login(){
-let u=user.value,p=pass.value;
-let users=getUsers();
-
-if(users[u] && users[u].pass===p){
-
-currentUser=u;
-role=users[u].role;
-
-localStorage.setItem("currentUser",u);
-localStorage.setItem("role",role);
-
-start();
-
-}else alert("Wrong login");
+function continueAsGuest(){
+localStorage.setItem("user","guest");
+startApp();
 }
 
-/* ===== START ===== */
-function start(){
+function signIn(){
+let u=username.value;
+let p=password.value;
 
-auth.classList.add("hidden");
-panelInfo.classList.remove("hidden");
-uploads.classList.remove("hidden");
-
-roleText.innerText=role.toUpperCase();
-me.innerText=currentUser;
-
-loadSchedule();
+if(users[u] && users[u]===p){
+localStorage.setItem("user",u);
+startApp();
+}else{
+alert("Wrong login");
+}
 }
 
-/* ===== LOGOUT ===== */
-function logout(){
-localStorage.clear();
-location.reload();
+/* ===== START APP ===== */
+function startApp(){
+authScreen.style.display="none";
+uploadBox.style.display="block";
+generateSchedule();
 }
 
-/* ===== PDF UPLOAD ===== */
-function uploadPDF(input,type){
+/* ===== UPLOAD PDF ===== */
+function saveFile(input,type){
 let file=input.files[0];
-if(!file)return;
+if(!file) return;
 
 let reader=new FileReader();
 reader.onload=function(){
-localStorage.setItem(type+"_"+currentUser,reader.result);
-alert(type+" uploaded");
+localStorage.setItem(type,reader.result);
+alert(type+" uploaded successfully");
 };
 reader.readAsDataURL(file);
 }
 
-/* ===== SAVE ROW ===== */
-function saveRow(btn){
-
-if(role==="student"){
-alert("No permission");
-return;
-}
-
-let row=btn.closest("tr");
-
-let data={
-somo:row.children[2].querySelector("select").value,
-mwalimu:row.children[3].querySelector("select").value,
-muda:row.children[4].querySelector("input").value
-};
-
-let key="schedule_"+currentUser;
-let all=JSON.parse(localStorage.getItem(key)||"[]");
-
-all.push(data);
-localStorage.setItem(key,JSON.stringify(all));
-
-alert("Saved");
-}
-
-/* ===== LOAD SCHEDULE ===== */
-function loadSchedule(){
-
+/* ===== SCHEDULE ===== */
+function generateSchedule(){
 let html="";
 
 for(let f=1;f<=4;f++){
-
-html+=`
-<div class="card">
+html+=`<div class="office" style="display:block">
 <h3>Form ${f}</h3>
-<table>
+<table class="form${f}">
 <tr>
-<th>Siku</th>
-<th>Kipindi</th>
-<th>Somo</th>
-<th>Mwalimu</th>
-<th>Muda</th>
-<th>Save</th>
+<th>Siku</th><th>Kipindi</th><th>Somo</th><th>Mwalimu</th><th>Muda</th>
 </tr>`;
 
-baseSchedule.forEach(d=>{
-d.time.forEach((t,i)=>{
-
+schedule.forEach(day=>{
+day.periods.forEach(p=>{
 html+=`
 <tr>
-<td>${d.day}</td>
-<td>${i+1}</td>
+<td>${day.siku}</td>
+<td>${p.kipindi}</td>
 <td>${select(masomo)}</td>
 <td>${select(walimu)}</td>
-<td><input type="time" value="${t}"></td>
-<td>
-<button onclick="saveRow(this)" ${role==="student"?"disabled":""}>
-Save
-</button>
-</td>
+<td><input type="time" value="${p.muda}"></td>
 </tr>`;
-
 });
 });
 
-html+=`</table></div>`;
+html+="</table></div>";
 }
 
-schedule.innerHTML=html;
+scheduleContainer.innerHTML=html;
 }
 
-/* ===== SELECT ===== */
+/* dropdown */
 function select(arr){
 return `<select>${arr.map(x=>`<option>${x}</option>`).join("")}</select>`;
 }
 
-/* ===== AUTO LOGIN ===== */
-let u=localStorage.getItem("currentUser");
-let r=localStorage.getItem("role");
-
-if(u){
-currentUser=u;
-role=r;
-start();
+/* AUTO LOGIN */
+if(localStorage.getItem("user")){
+startApp();
 }
 
 </script>
 
 </body>
-</html>
+  </html>

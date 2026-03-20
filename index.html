@@ -9,13 +9,12 @@
 body{font-family:Arial,sans-serif;margin:0;background:#f4f6fb;}
 
 header{
+display:flex;justify-content:space-between;align-items:center;
 background:linear-gradient(90deg,#1a73e8,#0b4db8);
-color:white;
-text-align:center;
-padding:18px;
-font-size:22px;
-font-weight:bold;
+color:white;padding:15px;
 }
+
+.menu-btn{font-size:26px;cursor:pointer;}
 
 .office{background:white;padding:15px;margin:10px;border-radius:8px;}
 
@@ -37,18 +36,17 @@ th{color:white;}
 
 <body>
 
-<header>RATIBA YANGU</header>
+<header>
+<h3>Nguliguli Secondary School</h3>
+</header>
 
-<!-- AUTH -->
+<!-- LOGIN -->
 <div id="authScreen" class="office">
-<h3>Login / Register</h3>
-
+<h3>Sign In</h3>
 <input id="username" class="auth-input" placeholder="Username">
 <input id="password" type="password" class="auth-input" placeholder="Password">
-
-<button class="auth-btn" onclick="register()">Register</button>
-<button class="auth-btn" onclick="login()">Login</button>
-<button class="auth-btn" onclick="guest()">Guest</button>
+<button class="auth-btn" onclick="signIn()">Login</button>
+<button class="auth-btn" onclick="continueAsGuest()">Guest</button>
 </div>
 
 <!-- APP -->
@@ -69,48 +67,27 @@ const masomo=[
 ];
 
 const schedule=[
-{ siku:"Jumatatu"},
-{ siku:"Jumanne"},
-{ siku:"Jumatano"},
-{ siku:"Alhamisi"},
-{ siku:"Ijumaa"}
+{ siku:"Jumatatu", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"}]},
+{ siku:"Jumanne", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"}]},
+{ siku:"Jumatano", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"}]},
+{ siku:"Alhamisi", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"}]},
+{ siku:"Ijumaa", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"}]}
 ];
 
-/* CURRENT USER */
-let currentUser = null;
+/* STORAGE */
+let savedRows = JSON.parse(localStorage.getItem("savedRows")||"{}");
 
-/* REGISTER */
-function register(){
+/* AUTH */
+function signIn(){
 let u=username.value,p=password.value;
-if(!u||!p) return alert("Jaza zote");
-
-let users = JSON.parse(localStorage.getItem("users")||"{}");
-
-if(users[u]) return alert("Account ipo tayari");
-
-users[u]={pass:btoa(p)};
-localStorage.setItem("users",JSON.stringify(users));
-
-alert("Registered ✔ sasa login");
-}
-
-/* LOGIN */
-function login(){
-let u=username.value,p=password.value;
-
-let users = JSON.parse(localStorage.getItem("users")||"{}");
-
-if(users[u] && users[u].pass===btoa(p)){
-currentUser=u;
-localStorage.setItem("currentUser",u);
+if(u && p){
+localStorage.setItem("user",u);
 startApp();
-}else alert("Login imekataa");
+}else alert("Jaza login");
 }
 
-/* GUEST */
-function guest(){
-currentUser="guest";
-localStorage.setItem("currentUser","guest");
+function continueAsGuest(){
+localStorage.setItem("user","guest");
 startApp();
 }
 
@@ -121,97 +98,64 @@ appScreen.classList.remove("hidden");
 generate();
 }
 
-/* SAVE PER USER */
-function getKey(){
-return "schedule_"+currentUser;
-}
-
-function loadData(){
-return JSON.parse(localStorage.getItem(getKey())||"{}");
-}
-
-function saveData(data){
-localStorage.setItem(getKey(),JSON.stringify(data));
-}
-
-/* AUTO SAVE */
+/* SAVE */
 function autoSave(btn){
 let row = btn.closest("tr");
-let table = btn.closest("table");
 
-let id = table.dataset.form+"_"+row.dataset.day+"_"+row.dataset.period;
+let id = row.children[0].innerText+"_"+row.children[1].innerText;
 
-let data = loadData();
-
-data[id]={
+savedRows[id]={
 somo: row.children[2].querySelector("select").value,
 mwalimu: row.children[3].querySelector("select").value,
 muda: row.children[4].querySelector("input").value
 };
 
-saveData(data);
+localStorage.setItem("savedRows",JSON.stringify(savedRows));
 
 btn.innerText="Edit";
-btn.onclick=()=>editRow(row,id,btn);
+btn.onclick=()=>editRow(row,id);
 
 alert("Saved ✔");
 }
 
 /* EDIT */
-function editRow(row,id,btn){
-let data = loadData()[id];
+function editRow(row,id){
+let data=savedRows[id];
 if(!data) return;
 
 row.children[2].querySelector("select").value=data.somo;
 row.children[3].querySelector("select").value=data.mwalimu;
 row.children[4].querySelector("input").value=data.muda;
 
+let btn=row.querySelector("button");
 btn.innerText="Save";
 btn.onclick=()=>autoSave(btn);
 }
 
-/* SELECT */
-function select(arr){
-return `<select>${arr.map(x=>`<option>${x}</option>`).join("")}</select>`;
-}
-
 /* GENERATE */
 function generate(){
-
-let data = loadData();
-
 let html="";
 
 for(let f=1; f<=4; f++){
-html+=`
-<div class="office">
+html+=`<div class="office">
 <h3>Form ${f}</h3>
-<table class="form${f}" data-form="form${f}">
+<table class="form${f}">
 <tr>
-<th>Siku</th>
-<th>Kipindi</th>
-<th>Somo</th>
-<th>Mwalimu</th>
-<th>Muda</th>
-<th>Action</th>
+<th>Siku</th><th>Kipindi</th><th>Somo</th><th>Mwalimu</th><th>Muda</th><th>Action</th>
 </tr>`;
 
 schedule.forEach(day=>{
-for(let p=1; p<=4; p++){
-
-let id="form"+f+"_"+day.siku+"_"+p;
-let d=data[id]||{};
-
+day.periods.forEach(p=>{
 html+=`
-<tr data-day="${day.siku}" data-period="${p}">
+<tr>
 <td>${day.siku}</td>
-<td>${p}</td>
+<td>${p.kipindi}</td>
 <td>${select(masomo)}</td>
 <td>${select(walimu)}</td>
-<td><input type="time" value="${d.muda || "08:00"}"></td>
+<td><input type="time" value="${p.muda}"></td>
 <td><button onclick="autoSave(this)">Save</button></td>
 </tr>`;
-}
+});
 });
 
 html+=`</table></div>`;
@@ -220,9 +164,13 @@ html+=`</table></div>`;
 appScreen.innerHTML=html;
 }
 
+/* SELECT */
+function select(arr){
+return `<select>${arr.map(x=>`<option>${x}</option>`).join("")}</select>`;
+}
+
 /* AUTO LOGIN */
-if(localStorage.getItem("currentUser")){
-currentUser = localStorage.getItem("currentUser");
+if(localStorage.getItem("user")){
 startApp();
 }
 

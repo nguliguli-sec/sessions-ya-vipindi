@@ -29,7 +29,7 @@ box-shadow:0 2px 6px rgba(0,0,0,0.08);
 
 .cell.active{background:#c8f7c5;}
 
-/* 🔴 LIVE SESSION BLINK (NEW) */
+/* 🔴 LIVE SESSION */
 .cell.live{
 background:red !important;
 color:#fff;
@@ -160,9 +160,9 @@ if(a){currentUser=a;startApp();}
 function startApp(){
 $('auth').classList.add('hidden');
 $('app').classList.remove('hidden');
-renderGrid();
-renderSelected();
-loadSchool();
+let state=localStorage.getItem(currentUser+'_min');
+if(state==='1'){formCollapsed=true;$('formArea').style.display='none';$('minBtn').innerText='V';}
+renderGrid();renderSelected();loadSchool();
 }
 
 function logout(){sessionStorage.clear();location.reload();}
@@ -171,6 +171,7 @@ function toggleForm(){
 formCollapsed=!formCollapsed;
 $('formArea').style.display=formCollapsed?'none':'block';
 $('minBtn').innerText='V';
+localStorage.setItem(currentUser+'_min',formCollapsed?'1':'0');
 }
 
 function saveTimetable(){
@@ -183,13 +184,13 @@ day:$('day').value,
 period:$('period').value,
 time:$('time').value,
 subject:$('subject').value,
-teacher:$('teacher').value,
-createdAt:Date.now() // 🔥 NEW
+teacher:$('teacher').value
 };
 
-localStorage.setItem(currentUser+'_tt_'+key,JSON.stringify(obj));
+localStorage.setItem(currentUser+'tt'+key,JSON.stringify(obj));
 addSelected(obj);
 renderGrid();
+playSound();
 }
 
 function addSelected(obj){
@@ -201,31 +202,78 @@ renderSelected();
 
 function renderSelected(){
 let list=JSON.parse(localStorage.getItem(currentUser+'_selected')||'[]');
-if(list.length===0){$('selectedList').innerHTML='Hakuna kipindi';return;}
+
+if(list.length===0){
+$('selectedList').innerHTML='Hakuna kipindi';
+return;
+}
+
 let html='';
+
 list.forEach((a,i)=>{
-html+=`<div class='selected-item'>
+html+=`
+<div class='selected-item'>
 <b>${a.form} | ${a.day} | ${a.period}</b><br>
 ${a.subject} - ${a.teacher} (${a.time||'no time'})
+
+<div style='position:absolute;right:8px;top:8px;'>
+<span class='action-circle edit' onclick="editSelected(${i})">✎</span>
+<span class='action-circle del' onclick="deleteSelected(${i})">×</span>
+</div>
+
 </div>`;
 });
+
 $('selectedList').innerHTML=html;
 }
 
+function editSelected(i){
+let list=JSON.parse(localStorage.getItem(currentUser+'_selected'));
+let a=list[i];
+$('form').value=a.form;
+$('day').value=a.day;
+$('period').value=a.period;
+$('time').value=a.time;
+$('subject').value=a.subject;
+$('teacher').value=a.teacher;
+}
+
+function deleteSelected(i){
+if(!confirm('Una uhakika unataka kufuta?'))return;
+let list=JSON.parse(localStorage.getItem(currentUser+'_selected'));
+let item=list[i];
+if(item&&item.key){
+localStorage.removeItem(currentUser+'tt'+item.key);
+}
+list.splice(i,1);
+localStorage.setItem(currentUser+'_selected',JSON.stringify(list));
+renderSelected();
+renderGrid();
+}
+
 function renderGrid(){
-let now=Date.now();
+let now=new Date();
 let html='';
 
 for(let p=0;p<periods.length;p++){
 for(let d=0;d<days.length;d++){
 
 let key=days[d]+'_'+periods[p];
-let data=JSON.parse(localStorage.getItem(currentUser+'_tt_'+key)||'null');
+let data=JSON.parse(localStorage.getItem(currentUser+'tt'+key)||'null');
 
 let isLive=false;
 
-if(data && data.createdAt){
-isLive = (now - data.createdAt) < 80*60*1000;
+if(data && data.time){
+let [h,m]=data.time.split(':');
+
+let start=new Date();
+start.setHours(h,m,0,0);
+
+let end=new Date(start.getTime()+80*60000);
+
+if(now>=start && now<=end){
+isLive=true;
+}
 }
 
 html+=`<div class='cell ${data?'active':''} ${isLive?'live':''}'
@@ -240,7 +288,7 @@ $('grid').innerHTML=html;
 }
 
 function loadCell(day,period){
-let data=JSON.parse(localStorage.getItem(currentUser+'_tt_'+day+'_'+period)||'null');
+let data=JSON.parse(localStorage.getItem(currentUser+'tt'+day+'_'+period)||'null');
 $('day').value=day;
 $('period').value=period;
 
@@ -270,6 +318,14 @@ localStorage.setItem(currentUser+'_school',v);
 function loadSchool(){
 let sc=localStorage.getItem(currentUser+'_school');
 if(sc)$('schoolName').innerText=sc;
+}
+
+function playSound(){
+try{
+let a=new Audio('notify.mp3');
+a.volume=1;
+a.play();
+}catch(e){}
 }
 </script>
 

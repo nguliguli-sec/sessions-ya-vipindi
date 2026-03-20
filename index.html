@@ -16,6 +16,10 @@ nav{display:flex;justify-content:space-between;align-items:center;background:#0d
 
 .selected-item{background:#fff;padding:8px;margin:6px 0;border-radius:8px;box-shadow:0 2px 5px rgba(0,0,0,0.08);font-size:13px;}
 
+.card{background:#fff;padding:10px;margin:10px 0;border-radius:10px;}
+
+.toggle-btn{cursor:pointer;font-weight:bold;user-select:none;}
+
 </style>
 </head>
 <body><!-- AUTH --><div id="auth" class="container">
@@ -24,6 +28,7 @@ nav{display:flex;justify-content:space-between;align-items:center;background:#0d
 <input id="pass" type="password" placeholder="Password" />
 <button onclick="register()">Register</button>
 <button onclick="login()">Login</button>
+<button onclick="forgotPassword()" style="background:#ff9800;">Forgot Password</button>
 </div><!-- APP --><div id="app" class="hidden"><nav>
 <div>
 <span id="schoolName" class="school-title" onclick="editSchool()">NGULIGULI SECONDARY</span>
@@ -32,7 +37,9 @@ nav{display:flex;justify-content:space-between;align-items:center;background:#0d
 <div><button onclick="logout()">Logout</button></div>
 </nav><div class="container">
 <h3 class="big">RATIBA YANGU</h3><div class="card">
-<h4>Selected Periods</h4>
+<div class="toggle-btn" onclick="toggleSelected()">
+<h4>Selected Periods ▼</h4>
+</div>
 <div id="selectedList">Hakuna kipindi</div>
 </div><div class="card">
 <h4>Weka Ratiba</h4>
@@ -46,12 +53,13 @@ nav{display:flex;justify-content:space-between;align-items:center;background:#0d
 </div><div class="grid" id="grid"></div>
 </div><script>
 let currentUser=null;
+let selectedCollapsed=false;
+
 const days=["Monday","Tuesday","Wednesday","Thursday","Friday"];
 const periods=["Period 1","Period 2","Period 3","Period 4"];
 
 function $(id){return document.getElementById(id);}
 
-/* DEVICE LIMIT REGISTRATION */
 function register(){
 let u=$('user').value,p=$('pass').value;
 if(!u||!p)return;
@@ -67,6 +75,19 @@ let d=JSON.parse(localStorage.getItem('u_'+u));
 if(d&&d.pass===p){currentUser=u;sessionStorage.setItem('active',u);startApp();}else alert('Wrong login');
 }
 
+/* FORGOT PASSWORD */
+function forgotPassword(){
+let u=prompt('Ingiza username yako');
+if(!u)return;
+let data=JSON.parse(localStorage.getItem('u_'+u));
+if(!data){alert('Account haipo');return;}
+let np=prompt('Weka password mpya');
+if(!np)return;
+data.pass=np;
+localStorage.setItem('u_'+u,JSON.stringify(data));
+alert('Password imebadilishwa, ingia tena');
+}
+
 window.onload=function(){let a=sessionStorage.getItem('active');if(a){currentUser=a;startApp();}}
 
 function startApp(){
@@ -76,24 +97,14 @@ renderGrid();renderSelected();loadSchool();}
 
 function logout(){sessionStorage.clear();location.reload();}
 
-/* SAVE */
 function saveTimetable(){
 let key=$('day').value+'_'+$('period').value;
-let obj={
-key:key,
-form:$('form').value,
-day:$('day').value,
-period:$('period').value,
-time:$('time').value,
-subject:$('subject').value,
-teacher:$('teacher').value
-};
+let obj={key:key,form:$('form').value,day:$('day').value,period:$('period').value,time:$('time').value,subject:$('subject').value,teacher:$('teacher').value};
 localStorage.setItem(currentUser+'_tt_'+key,JSON.stringify(obj));
 addSelected(obj);
 renderGrid();playSound();
 }
 
-/* SELECTED */
 function addSelected(obj){
 let list=JSON.parse(localStorage.getItem(currentUser+'_selected')||'[]');
 list.push(obj);
@@ -119,29 +130,24 @@ $('selectedList').innerHTML=html;
 function editSelected(i){
 let list=JSON.parse(localStorage.getItem(currentUser+'_selected'));
 let a=list[i];
-$('form').value=a.form;
-$('day').value=a.day;
-$('period').value=a.period;
-$('time').value=a.time;
-$('subject').value=a.subject;
-$('teacher').value=a.teacher;
+$('form').value=a.form;$('day').value=a.day;$('period').value=a.period;$('time').value=a.time;$('subject').value=a.subject;$('teacher').value=a.teacher;
 }
 
-/* DELETE WITH CONFIRM + SYNC GRID */
 function deleteSelected(i){
-if(!confirm('Una uhakika unataka kufuta hii ratiba?'))return;
+if(!confirm('Una uhakika unataka kufuta?'))return;
 let list=JSON.parse(localStorage.getItem(currentUser+'_selected'));
 let item=list[i];
-if(item&&item.key){
-localStorage.removeItem(currentUser+'_tt_'+item.key);
-}
+if(item&&item.key){localStorage.removeItem(currentUser+'_tt_'+item.key);}
 list.splice(i,1);
 localStorage.setItem(currentUser+'_selected',JSON.stringify(list));
-renderSelected();
-renderGrid();
+renderSelected();renderGrid();
 }
 
-/* GRID */
+function toggleSelected(){
+selectedCollapsed=!selectedCollapsed;
+$('selectedList').style.display=selectedCollapsed?'none':'block';
+}
+
 function renderGrid(){
 let html='';
 for(let p=0;p<periods.length;p++){
@@ -161,7 +167,6 @@ $('day').value=day;$('period').value=period;
 if(data){$('subject').value=data.subject;$('teacher').value=data.teacher;$('time').value=data.time;}else{$('subject').value='';$('teacher').value='';$('time').value='';}
 }
 
-/* SCHOOL */
 function editSchool(){
 $('schoolInput').style.display='block';
 $('schoolInput').value=$('schoolName').innerText;
@@ -178,6 +183,5 @@ if(sc)$('schoolName').innerText=sc;
 }
 
 function playSound(){try{let a=new Audio('notify.mp3');a.volume=1;a.play();}catch(e){}}
-
 </script></body>
-</html>
+                    </html>

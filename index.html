@@ -1,189 +1,132 @@
-<!DOCTYPE html>
-<html lang="sw">
-
+<!DOCTYPE html><html lang="sw">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ratiba ya Vipindi – Nguliguli Secondary</title>
-<link rel="manifest" href="manifest.json">
-
+<title>Ratiba Yangu</title>
 <style>
-body{font-family:Arial,sans-serif;padding:0;margin:0;background:#f4f6fb;}
-header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;background:linear-gradient(90deg,#1a73e8,#0b4db8);color:white;padding:15px 10px;border-radius:0 0 10px 10px;box-shadow:0 5px 15px rgba(0,0,0,0.2);}
-header .header-left{flex:1 1 70%;text-align:center;}
-header h1{margin:0;font-size:4vw;text-transform:uppercase;letter-spacing:2px;}
-header h2{margin:5px;font-weight:normal;font-size:3vw;text-transform:uppercase;}
-header p{font-size:2.5vw;text-transform:uppercase;}
-#langBtn{padding:5px 10px;font-weight:bold;border:none;border-radius:4px;cursor:pointer;background:white;color:#1a73e8;font-size:3vw;}
-.menu-btn{font-size:28px;cursor:pointer;color:white;margin-right:10px;}
-.sidebar{height:100%;width:0;position:fixed;top:0;left:0;background:#1a73e8;overflow-x:hidden;transition:0.3s;padding-top:60px;z-index:1000;}
-.sidebar a{padding:12px 20px;display:block;color:white;text-decoration:none;font-size:18px;}
-.sidebar a:hover{background:#0b4db8;}
-.closebtn{position:absolute;top:10px;right:20px;font-size:30px;color:white;cursor:pointer;}
-.office{display:none;background:white;padding:20px;border-radius:6px;box-shadow:0 0 10px rgba(0,0,0,0.2);margin-bottom:20px;}
-textarea,input[type=file],input[type=number],input[type=time]{width:100%;margin-top:10px;}
-button{margin-top:10px;padding:10px 15px;background:#1a73e8;color:white;border:none;cursor:pointer;}
-table{border-collapse:collapse;width:100%;margin-bottom:30px;}
-th,td{border:1px solid #999;padding:8px;}
-th{color:white;}
-select,input{width:100%;padding:4px;}
-
-.form1 th{background:#1a73e8;} .form1 td{background:#e8f0fe;}
-.form2 th{background:#d93025;} .form2 td{background:#fce8e6;}
-.form3 th{background:#188038;} .form3 td{background:#e6f4ea;}
-.form4 th{background:#f9ab00;} .form4 td{background:#fff4e5;}
-
-.notification{background-color:#1a73e8;color:#fff;font-weight:bold;padding:10px;margin:10px;border-radius:6px;text-align:center;}
-#bellNotice{display:none;position:fixed;top:70px;right:20px;background:#f9ab00;color:#000;padding:10px 20px;border-radius:6px;font-weight:bold;z-index:9999;}
-.saveBtn{background:#f9ab00;color:#000;padding:5px 10px;border-radius:4px;cursor:pointer;}
-.editBtn{background:#34a853;color:#fff;padding:5px 10px;border-radius:4px;}
-.auth-input{margin:5px 0;padding:8px;width:95%;}
-.auth-btn{margin:5px 0;padding:8px 12px;background:#1a73e8;color:#fff;border:none;border-radius:4px;cursor:pointer;}
+body{font-family:Arial;margin:0;background:#f4f6fb;}
+.hidden{display:none;}
+.container{padding:15px;}
+input,select,button{padding:10px;margin:5px 0;width:100%;}
+button{cursor:pointer;background:#1e88e5;color:#fff;border:none;border-radius:5px;}
+nav{display:flex;justify-content:space-between;align-items:center;background:#1e88e5;color:#fff;padding:10px;flex-wrap:wrap;}
+.card{background:#fff;padding:10px;margin:10px 0;border-radius:8px;}
 </style>
 </head>
-
-<body>
-
-<header>
-<div style="display:flex; align-items:center; gap:10px;">
-<span class="menu-btn" onclick="openMenu()">☰</span>
-<div class="header-left">
-<h1>Nguliguli Secondary School</h1>
-<h2>Ratiba ya Vipindi</h2>
-<p id="headerForm">Form One hadi Form Four</p>
+<body><!-- AUTH --><div id="auth" class="container">
+<h2>Login / Register</h2>
+<input id="name" placeholder="Jina" />
+<input id="user" placeholder="Username" />
+<input id="pass" type="password" placeholder="Password" />
+<button onclick="register()">Register</button>
+<button onclick="login()">Login</button>
+</div><!-- APP --><div id="app" class="hidden"><nav>
+<div><b id="schoolName">Nguliguli Secondary</b></div>
+<div>
+<button onclick="toggleLang()">Language</button>
+<button onclick="logout()">Logout</button>
 </div>
-</div>
+</nav><div class="container">
+<h3 id="title">RATIBA YANGU KWA WIKI</h3>
+<input id="editSchool" placeholder="Hariri jina la shule" />
+<button onclick="saveSchool()">Save</button><div class="card">
+<h4>Upload Scheme of Work (PDF)</h4>
+<input type="file" id="scheme" />
+<h4>Upload Lesson Plan (PDF)</h4>
+<input type="file" id="lesson" />
+</div><div class="card">
+<h4>Ratiba</h4><select id="form">
+<option>Form 1</option>
+<option>Form 2</option>
+<option>Form 3</option>
+<option>Form 4</option>
+</select><select id="day">
+<option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option>
+</select><select id="period">
+<option>Period 1</option><option>Period 2</option><option>Period 3</option><option>Period 4</option>
+</select><select id="subject"></select> <select id="teacher"></select>
 
-<div><button id="langBtn" onclick="toggleLanguage()">SW</button></div>
-</header>
+<button onclick="saveTimetable()">Save</button>
 
-<div class="notification" id="notificationText">
-Kipindi kimeanza – Tafadhali chagua somo, mwalimu, na muda kila kipindi
-</div>
-
-<div id="bellNotice">🔔 Kipindi Kimeanza</div>
-
-<!-- MENU -->
-<div id="menu" class="sidebar">
-<span class="closebtn" onclick="closeMenu()">×</span>
-<a onclick="showOffice('head')">Office ya Mkuu wa Shule</a>
-<a onclick="showOffice('academic')">Office ya Academic</a>
-<a onclick="showOffice('sports')">Office ya Michezo</a>
-<a onclick="showOffice('discipline')">Office ya Nidhamu</a>
-</div>
-
-<!-- AUTH -->
-<div id="authScreen" class="office" style="display:block;">
-<h3>Sign In</h3>
-<input id="username" class="auth-input" placeholder="Username">
-<input id="password" type="password" class="auth-input" placeholder="Password">
-<button class="auth-btn" onclick="signIn()">Sign In</button>
-<p>Huna account? <a href="#" onclick="showRegister()">Register</a></p>
-<button class="auth-btn" onclick="continueAsGuest()">Continue as Guest</button>
-</div>
-
-<div id="registerScreen" class="office">
-<h3>Register</h3>
-<input id="regUsername" class="auth-input" placeholder="Username">
-<input id="regPassword" type="password" class="auth-input" placeholder="Password">
-<button class="auth-btn" onclick="registerAccount()">Register</button>
-<button class="auth-btn" onclick="backToAuth()">Back</button>
-</div>
-
-<!-- OFFICES -->
-<div id="head" class="office"><h3>Mkuu wa Shule</h3><textarea></textarea><button onclick="closeOffice()">Back</button></div>
-<div id="academic" class="office"><h3>Academic</h3><textarea></textarea><button onclick="closeOffice()">Back</button></div>
-<div id="sports" class="office"><h3>Michezo</h3><textarea></textarea><button onclick="closeOffice()">Back</button></div>
-<div id="discipline" class="office"><h3>Nidhamu</h3><textarea></textarea><button onclick="closeOffice()">Back</button></div>
-
-<div id="scheduleContainer"></div>
-
-<script>
-function openMenu(){document.getElementById("menu").style.width="250px";}
-function closeMenu(){document.getElementById("menu").style.width="0";}
-function showOffice(id){
-document.querySelectorAll('.office').forEach(o=>o.style.display="none");
-document.getElementById(id).style.display="block";
-}
-function closeOffice(){document.querySelectorAll('.office').forEach(o=>o.style.display="none");}
-
-/* LANG */
-let lang='sw';
-function toggleLanguage(){
-lang = (lang==='sw')?'eng':'sw';
-document.getElementById('langBtn').innerText = lang.toUpperCase();
-}
+</div><div id="list"></div></div><script>
 
 /* DATA */
 const walimu=["Denis Maige","Damiani Lushinge","Omari Mniru","Mario Maketa","Method Maginga"];
 const masomo=["Physics","History","Biology","Math","Chemistry","English","Kiswahili"];
 
-/* FIXED DROPDOWN */
-function dropdown(list){
-return `<select>
-<option>Chagua</option>
-${list.map(i=>`<option>${i}</option>`).join('')}
-</select>`;
+let currentUser=null;
+let lang="sw";
+
+/* LOAD DROPDOWNS */
+function loadOptions(){
+let s=document.getElementById('subject');
+let t=document.getElementById('teacher');
+
+s.innerHTML='';
+t.innerHTML='';
+
+masomo.forEach(m=>s.innerHTML+=`<option>${m}</option>`);
+walimu.forEach(w=>t.innerHTML+=`<option>${w}</option>`);
 }
 
-/* SCHEDULE */
-const schedule=[
-{siku:"Jumatatu",periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"}]},
-{siku:"Jumanne",periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"}]}
-];
+function register(){
+let u={name:document.getElementById('name').value,user:document.getElementById('user').value,pass:document.getElementById('pass').value};
+localStorage.setItem('user_'+u.user,JSON.stringify(u));
+alert('Registered');
+}
 
-function generateSchedule(){
-let container=document.getElementById('scheduleContainer');
-container.innerHTML='';
+function login(){
+let u=document.getElementById('user').value;
+let p=document.getElementById('pass').value;
+let data=JSON.parse(localStorage.getItem('user_'+u));
+if(data && data.pass===p){
+currentUser=u;
+document.getElementById('auth').classList.add('hidden');
+document.getElementById('app').classList.remove('hidden');
+loadOptions();
+loadData();
+}else alert('Wrong login');
+}
 
-['Form One','Form Two','Form Three','Form Four'].forEach((form,i)=>{
-let style='form'+(i+1);
+function logout(){
+currentUser=null;
+document.getElementById('auth').classList.remove('hidden');
+document.getElementById('app').classList.add('hidden');
+}
 
-let html=`<h2>${form}</h2><table class="${style}">
-<tr><th>Siku</th><th>Kipindi</th><th>Somo</th><th>Muda</th><th>Mwalimu</th></tr>`;
+function saveSchool(){localStorage.setItem(currentUser+'_school',document.getElementById('editSchool').value);}
 
-schedule.forEach(day=>{
-day.periods.forEach((p,j)=>{
-html+=`<tr>
-${j==0?`<td rowspan="${day.periods.length}">${day.siku}</td>`:''}
-<td>${p.kipindi}</td>
-<td class="subject">${dropdown(masomo)}</td>
-<td><input type="time" value="${p.muda}"></td>
-<td class="teacher">${dropdown(walimu)}</td>
-</tr>`;
+function saveTimetable(){
+let arr=JSON.parse(localStorage.getItem(currentUser+'_tt')||'[]');
+arr.push({form:form.value,day:day.value,period:period.value,subject:subject.value,teacher:teacher.value});
+localStorage.setItem(currentUser+'_tt',JSON.stringify(arr));
+render();
+}
+
+function render(){
+let arr=JSON.parse(localStorage.getItem(currentUser+'_tt')||'[]');
+let html='';
+arr.forEach((a,i)=>{
+html+=`<div class='card'>${a.form} - ${a.day} - ${a.period}<br>${a.subject} (${a.teacher}) <button onclick="del(${i})">Delete</button></div>`;
 });
-});
-
-html+=`</table>`;
-container.innerHTML+=html;
-});
+document.getElementById('list').innerHTML=html;
 }
 
-generateSchedule();
-
-/* AUTH SIMPLE */
-function continueAsGuest(){
-localStorage.setItem('currentUser','guest');
-document.getElementById('authScreen').style.display='none';
-alert("Guest mode");
+function del(i){
+let arr=JSON.parse(localStorage.getItem(currentUser+'_tt')||'[]');
+arr.splice(i,1);
+localStorage.setItem(currentUser+'_tt',JSON.stringify(arr));
+render();
 }
 
-function registerAccount(){
-alert("Registered");
+function loadData(){
+render();
 }
 
-function signIn(){
-alert("Logged in");
+function toggleLang(){
+lang=lang==='sw'?'en':'sw';
+document.getElementById('title').innerText=lang==='sw'?'RATIBA YANGU KWA WIKI':'MY WEEKLY TIMETABLE';
 }
 
-function backToAuth(){
-document.getElementById('registerScreen').style.display='none';
-}
-function showRegister(){
-document.getElementById('authScreen').style.display='none';
-document.getElementById('registerScreen').style.display='block';
-}
-</script>
-
-</body>
+</script></body>
 </html>

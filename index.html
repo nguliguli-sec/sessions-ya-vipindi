@@ -3,23 +3,55 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ratiba ya Vipindi – Nguliguli Secondary</title>
+<title>Nguliguli Level 3 System</title>
 
 <style>
-body{font-family:Arial,sans-serif;margin:0;background:#f4f6fb;}
+body{font-family:Arial;margin:0;background:#f4f6fb;}
 
 header{
-display:flex;justify-content:space-between;align-items:center;
+display:flex;
+justify-content:space-between;
+align-items:center;
 background:linear-gradient(90deg,#1a73e8,#0b4db8);
-color:white;padding:15px;
+color:white;
+padding:12px 15px;
 }
 
-.menu-btn{font-size:26px;cursor:pointer;}
+.dots{font-size:26px;cursor:pointer;}
 
-.office{background:white;padding:15px;margin:10px;border-radius:8px;}
+.side{
+position:fixed;
+top:0;right:-280px;
+width:250px;height:100%;
+background:white;
+box-shadow:-2px 0 10px rgba(0,0,0,0.2);
+padding:15px;
+transition:0.3s;
+z-index:999;
+}
 
-.auth-input{margin:5px 0;padding:8px;width:95%;}
-.auth-btn{padding:8px 12px;background:#1a73e8;color:#fff;border:none;margin:5px;}
+.side a{
+display:block;
+padding:10px;
+border-bottom:1px solid #eee;
+cursor:pointer;
+}
+
+.office{background:white;margin:10px;padding:15px;border-radius:8px;}
+.hidden{display:none;}
+
+input,select,button{
+padding:8px;
+margin:5px;
+width:95%;
+}
+
+button{
+background:#1a73e8;
+color:white;
+border:none;
+cursor:pointer;
+}
 
 table{border-collapse:collapse;width:100%;}
 th,td{border:1px solid #999;padding:6px;font-size:12px;}
@@ -29,32 +61,115 @@ th{color:white;}
 .form2 th{background:#d93025;}
 .form3 th{background:#188038;}
 .form4 th{background:#f9ab00;}
-
-.hidden{display:none;}
 </style>
 </head>
 
 <body>
 
 <header>
-<h3>Nguliguli Secondary School</h3>
+<h3>NGULIGULI LEVEL 3</h3>
+<span class="dots" onclick="toggleMenu()">⋮</span>
 </header>
 
-<!-- LOGIN -->
-<div id="authScreen" class="office">
-<h3>Sign In</h3>
-<input id="username" class="auth-input" placeholder="Username">
-<input id="password" type="password" class="auth-input" placeholder="Password">
-<button class="auth-btn" onclick="signIn()">Login</button>
-<button class="auth-btn" onclick="continueAsGuest()">Guest</button>
+<!-- MENU -->
+<div id="side" class="side">
+<h3>MENU</h3>
+
+<a onclick="show('schedule')">📅 Ratiba</a>
+<a onclick="show('scheme')">📚 Scheme of Work</a>
+<a onclick="show('lesson')">📝 Lesson Plan</a>
+<a onclick="enableNotif()">🔔 Enable Notifications</a>
+<a onclick="logout()">🚪 Logout</a>
 </div>
 
-<!-- APP -->
-<div id="appScreen" class="hidden"></div>
+<!-- LOGIN -->
+<div id="loginBox" class="office">
+<h3>Login</h3>
+<input id="user" placeholder="Username">
+<input id="pass" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
+<button onclick="guest()">Guest</button>
+</div>
+
+<!-- SCHEME -->
+<div id="scheme" class="office hidden">
+<h3>Scheme of Work</h3>
+<input type="file" id="schemeFile" accept="application/pdf">
+<button onclick="upload('scheme')">Upload</button>
+<div id="schemeList"></div>
+</div>
+
+<!-- LESSON -->
+<div id="lesson" class="office hidden">
+<h3>Lesson Plan</h3>
+<input type="file" id="lessonFile" accept="application/pdf">
+<button onclick="upload('lesson')">Upload</button>
+<div id="lessonList"></div>
+</div>
+
+<!-- SCHEDULE -->
+<div id="schedule" class="office hidden"></div>
 
 <script>
 
-/* DATA */
+/* ===== USERS ===== */
+let currentUser=null;
+
+function login(){
+let u=user.value,p=pass.value;
+if(!u||!p) return alert("Jaza");
+
+let users=JSON.parse(localStorage.getItem("users")||"{}");
+
+if(!users[u]){
+users[u]={pass:btoa(p),role:"teacher"};
+localStorage.setItem("users",JSON.stringify(users));
+}
+
+if(users[u].pass===btoa(p)){
+currentUser=u;
+start();
+}else alert("Login failed");
+}
+
+function guest(){
+currentUser="guest";
+start();
+}
+
+function logout(){
+localStorage.removeItem("currentUser");
+location.reload();
+}
+
+/* ===== START ===== */
+function start(){
+loginBox.classList.add("hidden");
+schedule.classList.remove("hidden");
+generate();
+renderFiles();
+}
+
+/* ===== MENU ===== */
+function toggleMenu(){
+let s=document.getElementById("side");
+s.style.right = (s.style.right==="0px")?"-280px":"0px";
+}
+
+/* ===== NOTIFICATIONS ===== */
+function enableNotif(){
+Notification.requestPermission().then(p=>{
+if(p==="granted") new Notification("Notifications ON ✔");
+});
+}
+
+function notify(msg){
+if(Notification.permission==="granted"){
+new Notification(msg);
+}
+}
+
+/* ===== DATA ===== */
 const walimu=[
 "Denis Maige","Damiani Lushinge","Omari Mniru","Mario Maketa",
 "Method Maginga","Samwel Msabila","Mwansiti Mbwana","Agness Tarence",
@@ -66,112 +181,111 @@ const masomo=[
 "English","Civics","Geography","Kiswahili"
 ];
 
-const schedule=[
-{ siku:"Jumatatu", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"}]},
-{ siku:"Jumanne", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"}]},
-{ siku:"Jumatano", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"}]},
-{ siku:"Alhamisi", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"}]},
-{ siku:"Ijumaa", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"}]}
+const scheduleData=[
+"Jumatatu","Jumanne","Jumatano","Alhamisi","Ijumaa"
 ];
 
-/* STORAGE */
-let savedRows = JSON.parse(localStorage.getItem("savedRows")||"{}");
+/* ===== STORAGE ===== */
+function key(){return "nguluguli_"+currentUser;}
+function load(){return JSON.parse(localStorage.getItem(key())||"{}");}
+function save(d){localStorage.setItem(key(),JSON.stringify(d));}
 
-/* AUTH */
-function signIn(){
-let u=username.value,p=password.value;
-if(u && p){
-localStorage.setItem("user",u);
-startApp();
-}else alert("Jaza login");
-}
-
-function continueAsGuest(){
-localStorage.setItem("user","guest");
-startApp();
-}
-
-/* START */
-function startApp(){
-authScreen.classList.add("hidden");
-appScreen.classList.remove("hidden");
-generate();
-}
-
-/* SAVE */
-function autoSave(btn){
-let row = btn.closest("tr");
-
-let id = row.children[0].innerText+"_"+row.children[1].innerText;
-
-savedRows[id]={
-somo: row.children[2].querySelector("select").value,
-mwalimu: row.children[3].querySelector("select").value,
-muda: row.children[4].querySelector("input").value
-};
-
-localStorage.setItem("savedRows",JSON.stringify(savedRows));
-
-btn.innerText="Edit";
-btn.onclick=()=>editRow(row,id);
-
-alert("Saved ✔");
-}
-
-/* EDIT */
-function editRow(row,id){
-let data=savedRows[id];
-if(!data) return;
-
-row.children[2].querySelector("select").value=data.somo;
-row.children[3].querySelector("select").value=data.mwalimu;
-row.children[4].querySelector("input").value=data.muda;
-
-let btn=row.querySelector("button");
-btn.innerText="Save";
-btn.onclick=()=>autoSave(btn);
-}
-
-/* GENERATE */
+/* ===== TIMETABLE GENERATOR ===== */
 function generate(){
+let data=load();
 let html="";
 
-for(let f=1; f<=4; f++){
-html+=`<div class="office">
-<h3>Form ${f}</h3>
-<table class="form${f}">
+scheduleData.forEach(day=>{
+html+=`<h3>📅 ${day}</h3>
+<table>
 <tr>
-<th>Siku</th><th>Kipindi</th><th>Somo</th><th>Mwalimu</th><th>Muda</th><th>Action</th>
+<th>Kipindi</th><th>Somo</th><th>Mwalimu</th><th>Muda</th><th>Action</th>
 </tr>`;
 
-schedule.forEach(day=>{
-day.periods.forEach(p=>{
+for(let i=1;i<=4;i++){
+
+let id=day+"_"+i;
+let d=data[id]||{};
+
 html+=`
 <tr>
-<td>${day.siku}</td>
-<td>${p.kipindi}</td>
-<td>${select(masomo)}</td>
-<td>${select(walimu)}</td>
-<td><input type="time" value="${p.muda}"></td>
-<td><button onclick="autoSave(this)">Save</button></td>
+<td>${i}</td>
+
+<td><select id="s_${id}">
+${masomo.map(m=>`<option ${d.somo==m?'selected':''}>${m}</option>`).join("")}
+</select></td>
+
+<td><select id="t_${id}">
+${walimu.map(w=>`<option ${d.mwalimu==w?'selected':''}>${w}</option>`).join("")}
+</select></td>
+
+<td><input type="time" id="m_${id}" value="${d.muda||''}"></td>
+
+<td><button onclick="saveRow('${id}')">Save</button></td>
 </tr>`;
-});
-});
-
-html+=`</table></div>`;
 }
 
-appScreen.innerHTML=html;
+html+=`</table><br>`;
+});
+
+schedule.innerHTML=html;
 }
 
-/* SELECT */
-function select(arr){
-return `<select>${arr.map(x=>`<option>${x}</option>`).join("")}</select>`;
+/* ===== SAVE ROW ===== */
+function saveRow(id){
+let data=load();
+
+data[id]={
+somo:document.getElementById("s_"+id).value,
+mwalimu:document.getElementById("t_"+id).value,
+muda:document.getElementById("m_"+id).value
+};
+
+save(data);
+notify("Saved ✔");
+}
+
+/* ===== PDF ===== */
+let files=JSON.parse(localStorage.getItem("files")||"{}");
+
+function upload(type){
+let input=type==="scheme"?schemeFile:lessonFile;
+let file=input.files[0];
+if(!file) return alert("Chagua PDF");
+
+let r=new FileReader();
+
+r.onload=function(){
+if(!files[type]) files[type]=[];
+
+files[type].push({name:file.name,data:r.result});
+
+localStorage.setItem("files",JSON.stringify(files));
+
+notify("PDF uploaded ✔");
+renderFiles();
+};
+
+r.readAsDataURL(file);
+}
+
+function renderFiles(){
+if(!files.scheme) files.scheme=[];
+if(!files.lesson) files.lesson=[];
+
+schemeList.innerHTML=files.scheme.map(f=>
+`<p>📄 ${f.name}</p>`
+).join("");
+
+lessonList.innerHTML=files.lesson.map(f=>
+`<p>📄 ${f.name}</p>`
+).join("");
 }
 
 /* AUTO LOGIN */
-if(localStorage.getItem("user")){
-startApp();
+if(localStorage.getItem("currentUser")){
+currentUser=localStorage.getItem("currentUser");
+start();
 }
 
 </script>

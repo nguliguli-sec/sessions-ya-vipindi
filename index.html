@@ -6,23 +6,24 @@
 <title>Ratiba ya Vipindi – Nguliguli Secondary</title>
 
 <style>
-body{font-family:Arial,sans-serif;padding:0;margin:0;background:#f4f6fb;}
+body{font-family:Arial,sans-serif;margin:0;background:#f4f6fb;}
 
 header{
-display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;
 background:linear-gradient(90deg,#1a73e8,#0b4db8);
-color:white;padding:15px 10px;
+color:white;
+text-align:center;
+padding:18px;
+font-size:22px;
+font-weight:bold;
 }
 
-.menu-btn{font-size:28px;cursor:pointer;color:white;margin-right:10px;}
-
-.office{display:none;background:white;padding:20px;margin:10px;border-radius:6px;}
+.office{background:white;padding:15px;margin:10px;border-radius:8px;}
 
 .auth-input{margin:5px 0;padding:8px;width:95%;}
 .auth-btn{padding:8px 12px;background:#1a73e8;color:#fff;border:none;margin:5px;}
 
 table{border-collapse:collapse;width:100%;}
-th,td{border:1px solid #999;padding:8px;font-size:12px;}
+th,td{border:1px solid #999;padding:6px;font-size:12px;}
 th{color:white;}
 
 .form1 th{background:#1a73e8;}
@@ -31,52 +32,23 @@ th{color:white;}
 .form4 th{background:#f9ab00;}
 
 .hidden{display:none;}
-
-/* DOT MENU */
-.dotMenu{position:relative;display:inline-block;}
-.dotContent{
-display:none;position:absolute;right:0;background:white;
-min-width:150px;box-shadow:0 0 10px rgba(0,0,0,0.2);
-z-index:999;border-radius:6px;
-}
-.dotContent a{display:block;padding:10px;text-decoration:none;color:black;cursor:pointer;}
-.dotContent a:hover{background:#eee;}
 </style>
 </head>
 
 <body>
 
-<header>
-<div>
-<span class="menu-btn" onclick="openMenu()">☰</span>
-<h3>Nguliguli Secondary School</h3>
-</div>
-
-<div class="dotMenu">
-<span class="menu-btn" onclick="toggleDot()">⋮</span>
-<div id="dotBox" class="dotContent">
-<a onclick="logout()">Logout</a>
-</div>
-</div>
-</header>
+<header>RATIBA YANGU</header>
 
 <!-- AUTH -->
-<div id="authScreen" class="office" style="display:block;">
-<h3>Sign In</h3>
+<div id="authScreen" class="office">
+<h3>Login / Register</h3>
+
 <input id="username" class="auth-input" placeholder="Username">
 <input id="password" type="password" class="auth-input" placeholder="Password">
-<button class="auth-btn" onclick="signIn()">Login</button>
-<button class="auth-btn" onclick="showRegister()">Register</button>
-<button class="auth-btn" onclick="continueAsGuest()">Guest</button>
-</div>
 
-<!-- REGISTER -->
-<div id="registerScreen" class="office">
-<h3>Register</h3>
-<input id="regUsername" class="auth-input" placeholder="Username">
-<input id="regPassword" type="password" class="auth-input" placeholder="Password">
-<button class="auth-btn" onclick="registerAccount()">Save</button>
-<button class="auth-btn" onclick="backToAuth()">Back</button>
+<button class="auth-btn" onclick="register()">Register</button>
+<button class="auth-btn" onclick="login()">Login</button>
+<button class="auth-btn" onclick="guest()">Guest</button>
 </div>
 
 <!-- APP -->
@@ -84,7 +56,7 @@ z-index:999;border-radius:6px;
 
 <script>
 
-/* ===== DATA ORIGINAL ===== */
+/* DATA */
 const walimu=[
 "Denis Maige","Damiani Lushinge","Omari Mniru","Mario Maketa",
 "Method Maginga","Samwel Msabila","Mwansiti Mbwana","Agness Tarence",
@@ -92,181 +64,110 @@ const walimu=[
 ];
 
 const masomo=[
-"Physics","History","Biology","Mathematics","Business Studies","Chemistry",
-"English Language","English Literature","Civics","Geography","Kiswahili"
+"Physics","History","Biology","Mathematics","Business","Chemistry",
+"English","Civics","Geography","Kiswahili"
 ];
 
 const schedule=[
-{ siku:"Jumatatu", periods:[
-{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},
-{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"},
-{kipindi:5,muda:"11:00"},{kipindi:6,muda:"11:45"}
-]},
-{ siku:"Jumanne", periods:[
-{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},
-{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"},
-{kipindi:5,muda:"11:00"},{kipindi:6,muda:"11:45"}
-]},
-{ siku:"Jumatano", periods:[
-{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},
-{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"},
-{kipindi:5,muda:"11:00"},{kipindi:6,muda:"11:45"}
-]},
-{ siku:"Alhamisi", periods:[
-{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},
-{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"},
-{kipindi:5,muda:"11:00"},{kipindi:6,muda:"11:45"}
-]},
-{ siku:"Ijumaa", periods:[
-{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},
-{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"},
-{kipindi:5,muda:"11:00"},{kipindi:6,muda:"11:45"}
-]}
+{ siku:"Jumatatu"},
+{ siku:"Jumanne"},
+{ siku:"Jumatano"},
+{ siku:"Alhamisi"},
+{ siku:"Ijumaa"}
 ];
 
-/* ===== STORAGE ===== */
-let savedRows = JSON.parse(localStorage.getItem("savedRows") || "{}");
+/* CURRENT USER */
+let currentUser = null;
 
-/* ===== AUTH ===== */
-function getAcc(){
-return JSON.parse(localStorage.getItem("acc")||"{}");
-}
-
-function registerAccount(){
-let u=regUsername.value,p=regPassword.value;
-if(!u||!p)return alert("Fill all");
-
-let acc=getAcc();
-if(acc[u])return alert("Exists");
-
-acc[u]={pass:btoa(p)};
-localStorage.setItem("acc",JSON.stringify(acc));
-
-alert("Registered");
-backToAuth();
-}
-
-function signIn(){
+/* REGISTER */
+function register(){
 let u=username.value,p=password.value;
-let acc=getAcc();
+if(!u||!p) return alert("Jaza zote");
 
-if(acc[u] && acc[u].pass===btoa(p)){
-localStorage.setItem("user",u);
+let users = JSON.parse(localStorage.getItem("users")||"{}");
+
+if(users[u]) return alert("Account ipo tayari");
+
+users[u]={pass:btoa(p)};
+localStorage.setItem("users",JSON.stringify(users));
+
+alert("Registered ✔ sasa login");
+}
+
+/* LOGIN */
+function login(){
+let u=username.value,p=password.value;
+
+let users = JSON.parse(localStorage.getItem("users")||"{}");
+
+if(users[u] && users[u].pass===btoa(p)){
+currentUser=u;
+localStorage.setItem("currentUser",u);
 startApp();
-}else alert("Wrong login");
+}else alert("Login imekataa");
 }
 
-function continueAsGuest(){
-localStorage.setItem("user","guest");
+/* GUEST */
+function guest(){
+currentUser="guest";
+localStorage.setItem("currentUser","guest");
 startApp();
 }
 
-function backToAuth(){
-authScreen.style.display="block";
-registerScreen.style.display="none";
-}
-
-/* ===== APP ===== */
+/* START */
 function startApp(){
-authScreen.style.display="none";
-registerScreen.style.display="none";
+authScreen.classList.add("hidden");
 appScreen.classList.remove("hidden");
 generate();
 }
 
-/* ===== LOGOUT ===== */
-function logout(){
-localStorage.removeItem("user");
-location.reload();
+/* SAVE PER USER */
+function getKey(){
+return "schedule_"+currentUser;
 }
 
-function toggleDot(){
-let d=document.getElementById("dotBox");
-d.style.display=(d.style.display==="block")?"none":"block";
+function loadData(){
+return JSON.parse(localStorage.getItem(getKey())||"{}");
 }
 
-/* ===== AUTO SAVE + HIDE + EDIT ===== */
-function autoSave(el){
+function saveData(data){
+localStorage.setItem(getKey(),JSON.stringify(data));
+}
 
-let row=el.closest("tr");
-let subject=row.children[2].querySelector("select").value;
-if(!subject) return;
+/* AUTO SAVE */
+function autoSave(btn){
+let row = btn.closest("tr");
+let table = btn.closest("table");
 
-let user=localStorage.getItem("user")||"guest";
-let rowId=row.rowIndex+"_"+subject;
+let id = table.dataset.form+"_"+row.dataset.day+"_"+row.dataset.period;
 
-savedRows[rowId]={
-somo:subject,
-mwalimu:row.children[3].querySelector("select").value,
-muda:row.children[4].querySelector("input").value,
-saved:true
+let data = loadData();
+
+data[id]={
+somo: row.children[2].querySelector("select").value,
+mwalimu: row.children[3].querySelector("select").value,
+muda: row.children[4].querySelector("input").value
 };
 
-localStorage.setItem("savedRows",JSON.stringify(savedRows));
+saveData(data);
 
-/* hide other rows */
-document.querySelectorAll("tr").forEach(r=>{
-let s=r.querySelector("select");
-if(s && s.value!==subject && s.value!==""){
-r.style.display="none";
-}
-});
-
-/* button → edit */
-let btn=row.querySelector("button");
 btn.innerText="Edit";
-btn.onclick=()=>editRow(row,rowId);
+btn.onclick=()=>editRow(row,id,btn);
 
 alert("Saved ✔");
 }
 
 /* EDIT */
-function editRow(row,id){
-
-row.style.display="";
-
-let data=savedRows[id];
+function editRow(row,id,btn){
+let data = loadData()[id];
 if(!data) return;
 
 row.children[2].querySelector("select").value=data.somo;
 row.children[3].querySelector("select").value=data.mwalimu;
 row.children[4].querySelector("input").value=data.muda;
 
-let btn=row.querySelector("button");
 btn.innerText="Save";
 btn.onclick=()=>autoSave(btn);
-}
-
-/* ===== GENERATE ===== */
-function generate(){
-let html="";
-
-for(let f=1;f<=4;f++){
-html+=`<div class="office" style="display:block;">
-<h3>Form ${f}</h3>
-<table class="form${f}">
-<tr>
-<th>Siku</th><th>Kipindi</th><th>Somo</th><th>Mwalimu</th><th>Muda</th><th>Action</th>
-</tr>`;
-
-schedule.forEach(day=>{
-day.periods.forEach(p=>{
-html+=`
-<tr>
-<td>${day.siku}</td>
-<td>${p.kipindi}</td>
-<td>${select(masomo)}</td>
-<td>${select(walimu)}</td>
-<td><input type="time" value="${p.muda}"></td>
-<td><button onclick="autoSave(this)">Save</button></td>
-</tr>`;
-});
-});
-
-html+="</table></div>";
-}
-
-appScreen.innerHTML=html;
 }
 
 /* SELECT */
@@ -274,8 +175,54 @@ function select(arr){
 return `<select>${arr.map(x=>`<option>${x}</option>`).join("")}</select>`;
 }
 
+/* GENERATE */
+function generate(){
+
+let data = loadData();
+
+let html="";
+
+for(let f=1; f<=4; f++){
+html+=`
+<div class="office">
+<h3>Form ${f}</h3>
+<table class="form${f}" data-form="form${f}">
+<tr>
+<th>Siku</th>
+<th>Kipindi</th>
+<th>Somo</th>
+<th>Mwalimu</th>
+<th>Muda</th>
+<th>Action</th>
+</tr>`;
+
+schedule.forEach(day=>{
+for(let p=1; p<=4; p++){
+
+let id="form"+f+"_"+day.siku+"_"+p;
+let d=data[id]||{};
+
+html+=`
+<tr data-day="${day.siku}" data-period="${p}">
+<td>${day.siku}</td>
+<td>${p}</td>
+<td>${select(masomo)}</td>
+<td>${select(walimu)}</td>
+<td><input type="time" value="${d.muda || "08:00"}"></td>
+<td><button onclick="autoSave(this)">Save</button></td>
+</tr>`;
+}
+});
+
+html+=`</table></div>`;
+}
+
+appScreen.innerHTML=html;
+}
+
 /* AUTO LOGIN */
-if(localStorage.getItem("user")){
+if(localStorage.getItem("currentUser")){
+currentUser = localStorage.getItem("currentUser");
 startApp();
 }
 

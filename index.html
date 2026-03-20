@@ -1,207 +1,395 @@
-<!DOCTYPE html>
-<html lang="sw">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Nguliguli Secondary School</title>
-
-<style>
-body{font-family:Arial;margin:0;background:#f4f6fb;}
-
-header{
-display:flex;justify-content:space-between;align-items:center;
-background:linear-gradient(90deg,#1a73e8,#0b4db8);
-color:white;padding:15px;
-}
-
-.office{background:white;margin:10px;padding:15px;border-radius:8px;}
-
-table{border-collapse:collapse;width:100%;}
-th,td{border:1px solid #999;padding:6px;font-size:12px;}
-th{background:#1a73e8;color:white;}
-
-.hidden{display:none;}
-
-.badge{
-background:#eee;
-padding:6px 10px;
-border-radius:20px;
-display:inline-block;
-margin-bottom:10px;
-}
-
-button{padding:6px 10px;margin:3px;background:#1a73e8;color:white;border:none;cursor:pointer;}
-
-.auth{background:white;padding:15px;margin:10px;border-radius:8px;}
-</style>
-</head>
-
-<body>
-
-<header>
-<h3>Nguliguli Secondary School</h3>
-<button onclick="logout()">Logout</button>
-</header>
-
-<div id="auth" class="auth">
-<h3>Login</h3>
-<input id="username" placeholder="Username"><br>
-<input id="password" type="password" placeholder="Password"><br>
-<button onclick="login()">Login</button>
-<button onclick="guest()">Guest</button>
-</div>
-
-<div id="app" class="hidden"></div>
-
-<script>
-
-/* DAYS + PERIODS */
-const days=["Jumatatu","Jumanne","Jumatano","Alhamisi","Ijumaa"];
-const periods=[1,2,3,4];
-
-/* WALIMU */
-const walimu=[
-"Denis Maige","Damiani Lushinge","Omari Mniru","Mario Maketa",
-"Method Maginga","Samwel Msabila","Mwansiti Mbwana","Agness Tarence",
-"Joyce Makoli","Nicholous Godfrey","Petro Benjamin","Kinunda Godfrid","Baraka John"
-];
-
-/* MASOMO */
-const masomo=[
-"Physics","History","Biology","Mathematics","Business","Chemistry",
-"English","Civics","Geography","Kiswahili"
-];
-
-const time=["08:00","08:45","09:30","10:15"];
-
-/* USER SYSTEM */
-let currentUser=null;
-let saved={};
-
-function loadData(){
-return JSON.parse(localStorage.getItem("timetable_"+currentUser)||"{}");
-}
-
-function saveData(){
-localStorage.setItem("timetable_"+currentUser,JSON.stringify(saved));
-}
-
-/* LOGIN */
-function login(){
-if(!username.value||!password.value) return alert("Jaza login");
-
-currentUser=username.value;
-saved=loadData();
-
-localStorage.setItem("user",currentUser);
-start();
-}
-
-function guest(){
-currentUser="guest";
-saved=loadData();
-localStorage.setItem("user","guest");
-start();
-}
-
-function logout(){
-localStorage.removeItem("user");
-location.reload();
-}
-
-function start(){
-auth.classList.add("hidden");
-app.classList.remove("hidden");
-render();
-}
-
-/* SAVE → HIDE OTHER ROWS SAME DAY */
-function saveRow(id,row){
-
-saved[id]={
-somo:row.querySelector(".somo").value,
-mwalimu:row.querySelector(".mwalimu").value,
-muda:row.querySelector(".muda").value,
-selected:true
-};
-
-saveData();
-
-let day=id.split("_")[0];
-
-document.querySelectorAll(`tr[data-id^="${day}_"]`).forEach(r=>{
-if(r.dataset.id!==id){
-r.classList.add("hidden");
-}
-});
-}
-
-/* EDIT */
-function editRow(id,row){
-row.classList.remove("hidden");
-
-if(saved[id]){
-row.querySelector(".somo").value=saved[id].somo;
-row.querySelector(".mwalimu").value=saved[id].mwalimu;
-row.querySelector(".muda").value=saved[id].muda;
-}
-}
-
-/* SELECT */
-function select(arr,cls){
-return `<select class="${cls}">
-${arr.map(x=>`<option>${x}</option>`).join("")}
-</select>`;
-}
-
-/* RENDER */
-function render(){
-
-let html="";
-
-days.forEach(day=>{
-
-html+=`
-<div class="office">
-<div class="badge">📅 ${day} (User: ${currentUser})</div>
-
-<table>
-<tr>
-<th>Kipindi</th><th>Somo</th><th>Mwalimu</th><th>Muda</th><th>Action</th>
-</tr>`;
-
-periods.forEach((p,i)=>{
-
-let id=day+"_"+p;
-let isHidden=saved[id] && !saved[id].selected;
-
-html+=`
-<tr data-id="${id}" class="${isHidden?'hidden':''}">
-<td>${p}</td>
-<td>${select(masomo,"somo")}</td>
-<td>${select(walimu,"mwalimu")}</td>
-<td><input class="muda" type="time" value="${time[i]}"></td>
-<td>
-<button onclick="saveRow('${id}',this.closest('tr'))">Save</button>
-<button onclick="editRow('${id}',this.closest('tr'))">Edit</button>
-</td>
-</tr>`;
-});
-
-html+=`</table></div>`;
-});
-
-app.innerHTML=html;
-}
-
-/* AUTO LOGIN */
-if(localStorage.getItem("user")){
-currentUser=localStorage.getItem("user");
-saved=loadData();
-start();
-}
-
-</script>
-
-</body>
-</html>
+<!DOCTYPE html>  <html lang="sw">    
+<head>    
+<meta charset="UTF-8">    
+<meta name="viewport" content="width=device-width, initial-scale=1.0">    
+<title>Ratiba ya Vipindi – Nguliguli Secondary</title>    
+<link rel="manifest" href="manifest.json">    
+<style>    
+body{font-family:Arial,sans-serif;padding:0;margin:0;background:#f4f6fb;}    
+header{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;background:linear-gradient(90deg,#1a73e8,#0b4db8);color:white;padding:15px 10px;border-radius:0 0 10px 10px;box-shadow:0 5px 15px rgba(0,0,0,0.2);}    
+header .header-left{flex:1 1 70%;text-align:center;}    
+header h1{margin:0;font-size:4vw;text-transform:uppercase;letter-spacing:2px;}    
+header h2{margin:5px;font-weight:normal;font-size:3vw;text-transform:uppercase;}    
+header p{font-size:2.5vw;text-transform:uppercase;}    
+#langBtn{padding:5px 10px;font-weight:bold;border:none;border-radius:4px;cursor:pointer;background:white;color:#1a73e8;font-size:3vw;}    
+.menu-btn{font-size:28px;cursor:pointer;color:white;margin-right:10px;}    
+.sidebar{height:100%;width:0;position:fixed;top:0;left:0;background:#1a73e8;overflow-x:hidden;transition:0.3s;padding-top:60px;z-index:1000;}    
+.sidebar a{padding:12px 20px;display:block;color:white;text-decoration:none;font-size:18px;}    
+.sidebar a:hover{background:#0b4db8;}    
+.closebtn{position:absolute;top:10px;right:20px;font-size:30px;color:white;cursor:pointer;}    
+.office{display:none;background:white;padding:20px;border-radius:6px;box-shadow:0 0 10px rgba(0,0,0,0.2);margin-bottom:20px;}    
+textarea,input[type=file],input[type=number],input[type=time]{width:100%;margin-top:10px;}    
+button{margin-top:10px;padding:10px 15px;background:#1a73e8;color:white;border:none;cursor:pointer;}    
+table{border-collapse:collapse;width:100%;margin-bottom:30px;}    
+th,td{border:1px solid #999;padding:8px;}    
+th{color:white;}    
+select,input{width:100%;padding:4px;}    
+.form1 th{background:#1a73e8;} .form1 td{background:#e8f0fe;}    
+.form2 th{background:#d93025;} .form2 td{background:#fce8e6;}    
+.form3 th{background:#188038;} .form3 td{background:#e6f4ea;}    
+.form4 th{background:#f9ab00;} .form4 td{background:#fff4e5;}    
+.notification{background-color:#1a73e8;color:#fff;font-weight:bold;padding:10px;margin:10px;border-radius:6px;text-align:center;}    
+#bellNotice{display:none;position:fixed;top:70px;right:20px;background:#f9ab00;color:#000;padding:10px 20px;border-radius:6px;font-weight:bold;z-index:9999;}    
+.saveBtn{background:#f9ab00;color:#000;padding:5px 10px;border-radius:4px;cursor:pointer;}    
+.editBtn{background:#34a853;color:#fff;padding:5px 10px;border-radius:4px;}    
+.auth-input{margin:5px 0;padding:8px;width:95%;}    
+.auth-btn{margin:5px 0;padding:8px 12px;background:#1a73e8;color:#fff;border:none;border-radius:4px;cursor:pointer;}    
+</style>    
+</head>    
+<body>    
+<header>    
+<div style="display:flex; align-items:center; gap:10px;">    
+  <span class="menu-btn" onclick="openMenu()">☰</span>    
+  <div class="header-left">    
+    <h1>Nguliguli Secondary School</h1>    
+    <h2>Ratiba ya Vipindi</h2>    
+    <p id="headerForm">Form One hadi Form Four</p>    
+  </div>    
+</div>    
+<div><button id="langBtn" onclick="toggleLanguage()">SW</button></div>    
+</header>  <!-- Notification -->  <div class="notification" id="notificationText">Kipindi kimeanza – Tafadhali chagua somo, mwalimu, na muda kila kipindi</div>    
+<div id="bellNotice">🔔 Kipindi Kimeanza</div>  <!-- Menu -->  <div id="menu" class="sidebar">    
+  <span class="closebtn" onclick="closeMenu()">×</span>    
+  <a onclick="showOffice('head')">Office ya Mkuu wa Shule</a>    
+  <a onclick="showOffice('academic')">Office ya Academic</a>    
+  <a onclick="showOffice('sports')">Office ya Michezo</a>    
+  <a onclick="showOffice('discipline')">Office ya Nidhamu</a>    
+  <hr style="border:1px solid #fff; margin:10px 0;">    
+  <h3 style="color:white; margin-left:20px;">Settings</h3>    
+  <a>General Settings</a>    
+  <a>Language</a>    
+  <a>Notifications</a>    
+  <a onclick="resetData()">Reset Data</a>    
+</div>  <!-- Auth Screens -->  <div id="authScreen" class="office" style="display:block;">    
+  <h3>Sign In</h3>    
+  <input type="text" id="username" class="auth-input" placeholder="Username">    
+  <input type="password" id="password" class="auth-input" placeholder="Password">    
+  <button class="auth-btn" onclick="signIn()">Sign In</button>    
+  <p>Huna account? <a href="#" onclick="showRegister()">Register</a></p>    
+  <button class="auth-btn" onclick="continueAsGuest()">Continue as Guest</button>    
+</div>  <div id="registerScreen" class="office">    
+  <h3>Register Account</h3>    
+  <input type="text" id="regUsername" class="auth-input" placeholder="Username">    
+  <input type="password" id="regPassword" class="auth-input" placeholder="Password">    
+  <button class="auth-btn" onclick="registerAccount()">Register</button>    
+  <button class="auth-btn" onclick="backToAuth()">Back</button>    
+</div>  <!-- Offices -->  <div id="head" class="office">    
+  <h3>Office ya Mkuu wa Shule</h3>    
+  <textarea placeholder="Andika tangazo"></textarea>    
+  <input type="file" accept="application/pdf">    
+  <br><button onclick="closeOffice()">Back</button>    
+</div>  <div id="academic" class="office">    
+  <h3>Office ya Academic</h3>    
+  <textarea placeholder="Andika tangazo"></textarea>    
+  <input type="file" accept="application/pdf">    
+  <h3>Report ya Masomo</h3>    
+  <button onclick="generateReport()">Angalia Report</button>    
+  <table id="reportTable"><tr><th>Somo</th><th>Jumla ya Wanafunzi</th></tr></table>    
+  <button onclick="closeOffice()">Back</button>    
+</div>  <div id="sports" class="office">    
+  <h3>Office ya Michezo</h3>    
+  <textarea></textarea>    
+  <input type="file" accept="application/pdf">    
+  <br><button onclick="closeOffice()">Back</button>    
+</div>  <div id="discipline" class="office">    
+  <h3>Office ya Nidhamu</h3>    
+  <textarea></textarea>    
+  <input type="file" accept="application/pdf">    
+  <br><button onclick="closeOffice()">Back</button>    
+</div>  <script>    
+/* ===== MENU ===== */    
+function openMenu(){document.getElementById("menu").style.width="250px";}    
+function closeMenu(){document.getElementById("menu").style.width="0";}    
+function showOffice(id){document.querySelectorAll('.office').forEach(o=>o.style.display="none");document.getElementById(id).style.display="block";}    
+function closeOffice(){document.querySelectorAll('.office').forEach(o=>o.style.display="none");}    
+    
+/* ===== LANGUAGE SWITCH ===== */    
+let lang='sw';    
+function toggleLanguage(){    
+  if(lang==='sw'){    
+    lang='eng';    
+    document.getElementById('langBtn').innerText='ENG';    
+    document.getElementById('notificationText').innerText="Period started – Please select subject, teacher, and time for each period";    
+    document.getElementById('headerForm').innerText="Form One to Form Four";    
+  } else {    
+    lang='sw';    
+    document.getElementById('langBtn').innerText='SW';    
+    document.getElementById('notificationText').innerText="Kipindi kimeanza – Tafadhali chagua somo, mwalimu, na muda kila kipindi";    
+    document.getElementById('headerForm').innerText="Form One hadi Form Four";    
+  }    
+}    
+    
+/* ===== RESET DATA ===== */    
+function resetData(){localStorage.removeItem('guestData'); let currentUser = localStorage.getItem('currentUser'); if(currentUser && currentUser!=='guest'){let accounts=JSON.parse(localStorage.getItem('accounts')||'{}');if(accounts[currentUser]){accounts[currentUser].savedRow=null;localStorage.setItem('accounts',JSON.stringify(accounts));}} location.reload();}    
+    
+/* ===== WALIMU & MASOMO ===== */    
+const walimu=["Denis Maige","Damiani Lushinge","Omari Mniru","Mario Maketa","Method Maginga","Samwel Msabila","Mwansiti Mbwana","Agness Tarence","Joyce Makoli","Nicholous Godfrey","Petro Benjamin","Kinunda Godfrid","Baraka John"];    
+const masomo=["Physics","History","Biology","Mathematics","Business Studies","Chemistry","English Language","English Literature","Civics","Geography","Kiswahili"];    
+    
+/* ===== SAVE + EDIT + HIDE OTHERS ===== */    
+function saveRowAndFilter(button){    
+  let row = button.closest("tr");    
+  let subject = row.querySelector(".subject select").value;    
+  let table = row.closest('table');    
+  let savedRowData = { tableId: table.className, rowIndex: Array.from(row.parentNode.children).indexOf(row) };    
+      
+  let currentUser = localStorage.getItem('currentUser');    
+  if(currentUser === 'guest'){    
+    localStorage.setItem('guestData', JSON.stringify(savedRowData));    
+  } else {    
+    let accounts = JSON.parse(localStorage.getItem('accounts')||'{}');    
+    if(accounts[currentUser]){    
+      accounts[currentUser].savedRow = savedRowData;    
+      localStorage.setItem('accounts', JSON.stringify(accounts));    
+    }    
+  }    
+    
+  alert("Kipindi cha "+subject+" kimehifadhiwa");    
+  table.querySelectorAll("tr").forEach(r=>{    
+    if(r!==row && r.querySelector("td")) r.style.display="none";    
+    else r.style.display="table-row";    
+  });    
+}    
+    
+function editRows(button){    
+  let table=button.closest('table');    
+  table.querySelectorAll("tr").forEach(r=>{    
+    if(r.querySelector("td")) r.style.display="table-row";    
+  });    
+  let audio=new Audio("https://actions.google.com/sounds/v1/alarms/school_bell.ogg");    
+  audio.play();    
+  if("Notification" in window){    
+    if(Notification.permission==="granted"){    
+      new Notification("Editing Rows",{body:"Sasa unaweza ku-edit vipindi vyote",icon:"icon-192x192.png"});    
+    } else {    
+      Notification.requestPermission().then(p=>{    
+        if(p==="granted"){    
+          new Notification("Editing Rows",{body:"Sasa unaweza ku-edit vipindi vyote",icon:"icon-192x192.png"});    
+        }    
+      });    
+    }    
+  }    
+}    
+    
+/* ===== DROPDOWN ===== */    
+function dropdown(list){return '<select>'+list.map(i=>`<option>${i}</option>`).join('')+'</select>';}    
+function addDropdowns(){    
+  document.querySelectorAll('.subject').forEach(td=>{td.innerHTML=dropdown(masomo);});    
+  document.querySelectorAll('.teacher').forEach(td=>{td.innerHTML=dropdown(walimu);});    
+}    
+    
+/* ===== AUTO BELL ===== */    
+function checkBell(){    
+  let now=new Date();    
+  let current=now.getHours().toString().padStart(2,'0')+":"+now.getMinutes().toString().padStart(2,'0');    
+  document.querySelectorAll('input[type="time"]').forEach(t=>{    
+    if(t.value===current){    
+      let bell=document.getElementById("bellNotice");    
+      bell.style.display="block";    
+      let audio=new Audio("https://actions.google.com/sounds/v1/alarms/school_bell.ogg");    
+      audio.play();    
+      if("Notification" in window){    
+        if(Notification.permission==="granted"){    
+          new Notification("Kipindi Kimeanza",{body:"Tafadhali chagua somo, mwalimu, na muda kila kipindi",icon:"icon-192x192.png"});    
+        } else {    
+          Notification.requestPermission().then(p=>{    
+            if(p==="granted"){    
+              new Notification("Kipindi Kimeanza",{body:"Tafadhali chagua somo, mwalimu, na muda kila kipindi",icon:"icon-192x192.png"});    
+            }    
+          });    
+        }    
+      }    
+      setTimeout(()=>bell.style.display="none",10000);    
+    }    
+  });    
+}    
+setInterval(checkBell,60000);    
+    
+/* ===== REPORT ===== */    
+function generateReport(){    
+  let subjects={};    
+  document.querySelectorAll("table tr").forEach(row=>{    
+    let subject=row.querySelector(".subject select");    
+    if(subject){    
+      let sub=subject.value;    
+      if(sub && sub!="Chagua Somo"){    
+        if(!subjects[sub]) subjects[sub]=0;    
+        subjects[sub]+=1;    
+      }    
+    }    
+  });    
+  let table=document.getElementById("reportTable");    
+  table.innerHTML="<tr><th>Somo</th><th>Jumla ya Wanafunzi</th></tr>";    
+  for(let s in subjects){table.innerHTML+='<tr><td>'+s+'</td><td>'+subjects[s]+'</td></tr>';}    
+}    
+    
+/* ===== RATIBA ===== */    
+function generate(formName,schedule,style){    
+  document.write('<h2>'+formName+'</h2><table class="'+style+'"><tr><th>Siku</th><th>Kipindi</th><th>Somo</th><th>Muda</th><th>Mwalimu</th><th>Edit</th><th>Save</th></tr>');    
+  schedule.forEach(day=>{    
+    let rowspan=day.periods.length;    
+    day.periods.forEach((p,i)=>{    
+      document.write("<tr>");    
+      if(i==0) document.write('<td rowspan="'+rowspan+'">'+day.siku+'</td>');    
+      document.write('<td>'+p.kipindi+'</td>');    
+      document.write('<td class="subject"></td>');    
+      document.write('<td><input type="time" value="'+p.muda+'"></td>');    
+      document.write('<td class="teacher"></td>');    
+      document.write('<td><button class="editBtn" onclick="editRows(this)">Edit</button></td>');    
+      document.write('<td><button class="saveBtn" onclick="saveRowAndFilter(this)">Save</button></td>');    
+      document.write("</tr>");    
+    });    
+  });    
+  document.write("</table>");    
+}    
+    
+/* ===== SCHEDULE DATA ===== */    
+const schedule=[    
+{siku:"Jumatatu", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]},    
+{siku:"Jumanne", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]},    
+{siku:"Jumatano", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]},    
+{siku:"Alhamisi", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]},    
+{siku:"Ijumaa", periods:[{kipindi:1,muda:"08:00"},{kipindi:2,muda:"08:45"},{kipindi:3,muda:"09:30"},{kipindi:4,muda:"10:15"}]}    
+];    
+    
+generate("Form One",schedule,"form1");    
+generate("Form Two",schedule,"form2");    
+generate("Form Three",schedule,"form3");    
+generate("Form Four",schedule,"form4");    
+    
+/* ===== DROPDOWNS & SAVED ROW PER USER ===== */    
+setTimeout(()=>{    
+  addDropdowns();    
+  let currentUser = localStorage.getItem('currentUser');    
+  if(currentUser){    
+    let accounts = JSON.parse(localStorage.getItem('accounts')||'{}');    
+    let saved = (currentUser === 'guest') ? JSON.parse(localStorage.getItem('guestData')||'null') : accounts[currentUser]?.savedRow;    
+    if(saved){    
+      let table=document.querySelector('table.'+saved.tableId);    
+      if(table){    
+        let row=table.querySelectorAll('tr')[saved.rowIndex];    
+        table.querySelectorAll('tr').forEach(r=>{    
+          if(r!==row && r.querySelector("td")) r.style.display='none';    
+          else r.style.display='table-row';    
+        });    
+      }    
+    }    
+  }    
+},500);    
+    
+/* ===== AUTH FUNCTIONS – FINAL VERSION ===== */    
+function continueAsGuest(){    
+    localStorage.setItem('currentUser','guest');    
+    document.getElementById('authScreen').style.display='none';    
+    document.querySelectorAll('.office').forEach(o=>{    
+        if(o.id !== 'authScreen' && o.id !== 'registerScreen') o.style.display='block';    
+    });    
+    alert("Umeingia kama Guest");    
+    
+    let saved = JSON.parse(localStorage.getItem('guestData')||'null');    
+    if(saved){    
+        let table=document.querySelector('table.'+saved.tableId);    
+        if(table){/* ===== RATIBA ===== */    
+function generate(formName, schedule, style) {    
+  document.write('<h2>' + formName + '</h2><table class="' + style + '"><tr><th>Siku</th><th>Kipindi</th><th>Somo</th><th>Muda</th><th>Mwalimu</th><th>Edit</th><th>Save</th></tr>');    
+  schedule.forEach(day => {    
+    let rowspan = day.periods.length;    
+    day.periods.forEach((p, i) => {    
+      document.write("<tr>");    
+      if (i == 0) document.write('<td rowspan="' + rowspan + '">' + day.siku + '</td>');    
+      document.write('<td>' + p.kipindi + '</td>');    
+      document.write('<td class="subject"></td>');    
+      document.write('<td><input type="time" value="' + p.muda + '"></td>');    
+      document.write('<td class="teacher"></td>');    
+      document.write('<td><button class="editBtn" onclick="editRows(this)">Edit</button></td>');    
+      document.write('<td><button class="saveBtn" onclick="saveRowAndFilter(this)">Save</button></td>');    
+      document.write("</tr>");    
+    });    
+  });    
+  document.write("</table>");    
+}    
+    
+/* ===== DROPDOWNS & SAVED ROW PER USER ===== */    
+setTimeout(() => {    
+  addDropdowns();    
+  let currentUser = localStorage.getItem('currentUser');    
+  if (currentUser) {    
+    let accounts = JSON.parse(localStorage.getItem('accounts') || '{}');    
+    let saved = (currentUser === 'guest') ? JSON.parse(localStorage.getItem('guestData') || 'null') : accounts[currentUser]?.savedRow;    
+    if (saved) {    
+      let table = document.querySelector('table.' + saved.tableId);    
+      if (table) {    
+        let row = table.querySelectorAll('tr')[saved.rowIndex];    
+        table.querySelectorAll('tr').forEach(r => {    
+          if (r !== row && r.querySelector("td")) r.style.display = "none";    
+          else r.style.display = "table-row";    
+        });    
+      }    
+    }    
+  }    
+}, 500);    
+    
+/* ===== AUTH FUNCTIONS – FINAL VERSION ===== */    
+function continueAsGuest() {    
+  localStorage.setItem('currentUser', 'guest');    
+  document.getElementById('authScreen').style.display = 'none';    
+  document.querySelectorAll('.office').forEach(o => {    
+    if (o.id !== 'authScreen' && o.id !== 'registerScreen') o.style.display = 'block';    
+  });    
+  alert("Umeingia kama Guest");    
+    
+  // Restore saved guest row if exists    
+  let saved = JSON.parse(localStorage.getItem('guestData') || 'null');    
+  if (saved) {    
+    let table = document.querySelector('table.' + saved.tableId);    
+    if (table) {    
+      let row = table.querySelectorAll('tr')[saved.rowIndex];    
+      table.querySelectorAll('tr').forEach(r => {    
+        if (r !== row && r.querySelector("td")) r.style.display = "none";    
+        else r.style.display = "table-row";    
+      });    
+    }    
+  }    
+}    
+    
+function registerAccount() {    
+  let username = document.getElementById('regUsername').value.trim();    
+  let password = document.getElementById('regPassword').value.trim();    
+    
+  if (!username || !password) {    
+    alert("Tafadhali jaza username na password");    
+    return;    
+  }    
+    
+  let accounts = JSON.parse(localStorage.getItem('accounts') || '{}');    
+  if (accounts[username]) {    
+    alert("Username tayari imetumika, chagua nyingine");    
+    return;    
+  }    
+    
+  accounts[username] = { password: password, savedRow: null };    
+  localStorage.setItem('accounts', JSON.stringify(accounts));    
+  localStorage.setItem('currentUser', username);    
+    
+  alert("Account imeundwa na umeingia kama " + username);    
+  document.getElementById('registerScreen').style.display = 'none';    
+  document.querySelectorAll('.office').forEach(o => {    
+    if (o.id !== 'authScreen' && o.id !== 'registerScreen') o.style.display = 'block';    
+  });    
+}    
+    
+function signIn() {    
+  let username = document.getElementById('username').value.trim();    
+  let password = document.getElementById('password').value.trim();    
+    
+  if (!username || !password) {    
+    alert("Tafadhali jaza username na password");    
+    return;    
+  }    
+    
+  let accounts = JSON.parse(localStorage.getItem('accounts') || '{}');    
+  if (accounts[username] && accounts[username].password === password) {    
+    localStorage.setItem('currentUser', username);    
+    alert("Umeingia kama " + username);    
+    document.getElementById('authScreen').style.display = 'none';    
+    document.q

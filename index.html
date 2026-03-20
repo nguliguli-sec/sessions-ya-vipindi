@@ -10,148 +10,100 @@ body{font-family:Arial;margin:0;background:#f4f6fb;}
 input,select,button{padding:10px;margin:5px 0;width:100%;}
 button{cursor:pointer;background:#1e88e5;color:#fff;border:none;border-radius:6px;}
 nav{display:flex;justify-content:space-between;align-items:center;background:#0d47a1;color:#fff;padding:10px;flex-wrap:wrap;}
-.card{background:#fff;padding:10px;margin:10px 0;border-radius:10px;}
 .big{text-transform:uppercase;font-weight:bold;text-align:center;}
-.smallbtn{width:auto;padding:6px 10px;margin:2px;}
-.tab{display:flex;gap:10px;}
-.tab button{flex:1;}
-.inline{display:flex;gap:6px;flex-wrap:wrap;}
 .school-wrap{display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
 .school-title{font-weight:bold;text-transform:uppercase;cursor:pointer;}
-.school-edit{display:none;max-width:180px;}.dropdown-wrap{position:relative;width:100%;} .dropdown-input{width:100%;padding:10px;} .dropdown-list{ position:absolute; bottom:100%; left:0; right:0; background:#fff; border:1px solid #ccc; border-radius:8px; max-height:180px; overflow-y:auto; z-index:999; display:none; box-shadow:0 5px 15px rgba(0,0,0,0.1); } .dropdown-item{padding:10px;cursor:pointer;} .dropdown-item:hover{background:#1e88e5;color:#fff;} </style>
+.school-edit{display:none;max-width:180px;}/* GRID TIMETABLE */ .grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:10px; } .cell{ background:#fff; min-height:70px; padding:6px; border-radius:8px; font-size:12px; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.08); } .cell b{display:block;font-size:11px;}
 
+</style>
 </head>
 <body><!-- AUTH --><div id="auth" class="container">
-<h2 class="big">ACCOUNT</h2><div class="tab">
-<button onclick="showTab('login')">LOGIN</button>
-<button onclick="showTab('register')">REGISTER</button>
-</div><div id="loginBox">
+<h2 class="big">ACCOUNT</h2>
 <input id="user" placeholder="Username" />
 <input id="pass" type="password" placeholder="Password" />
 <button onclick="login()">Login</button>
-</div><div id="registerBox" class="hidden">
-<input id="ruser" placeholder="Username" />
-<input id="rpass" type="password" placeholder="Password" />
 <button onclick="register()">Register</button>
-</div>
 </div><!-- APP --><div id="app" class="hidden"><nav>
 <div class="school-wrap">
 <span id="schoolName" class="school-title" onclick="enableEditSchool()">NGULIGULI SECONDARY</span>
 <input id="schoolInput" class="school-edit" type="text" onblur="saveSchoolName()" onkeydown="if(event.key==='Enter') saveSchoolName()" />
 </div>
-<div>
-<button class="smallbtn" onclick="toggleLang()">SW/EN</button>
-<button class="smallbtn" onclick="logout()">Logout</button>
-</div>
+<div><button onclick="logout()">Logout</button></div>
 </nav><div class="container">
-<h3 class="big" id="title">RATIBA YANGU KWA WIKI</h3><!-- SUBJECT MANAGER --><div class="card">
-<h4>Manage Subjects</h4>
-<div class="dropdown-wrap">
-<input id="newSubject" class="dropdown-input" placeholder="Andika au chagua subject..." oninput="filterSubjects()" onclick="toggleDropdown(true)" />
-<div id="subjectDropdown" class="dropdown-list"></div>
-</div>
-<button onclick="addSubject()">Save Subject</button>
-<div id="subjectList"></div>
-</div><!-- TEACHERS --><div class="card">
-<h4>Manage Teachers</h4>
-<input type="text" id="newTeacher" placeholder="Add teacher" />
-<button onclick="addTeacher()">Save Teacher</button>
-<div id="teacherList"></div>
+<h3 class="big">RATIBA YANGU</h3><div class="card">
+<h4>Selected Period</h4>
+<div id="selectedView">Hakuna kipindi</div>
 </div><div class="card">
-<h4>Ratiba</h4><select id="form">
+<h4>Weka Ratiba</h4><select id="form">
 <option>Form 1</option><option>Form 2</option><option>Form 3</option><option>Form 4</option>
-</select>
-<select id="day">
+</select><select id="day">
 <option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option>
-</select>
-<select id="period">
+</select><select id="period">
 <option>Period 1</option><option>Period 2</option><option>Period 3</option><option>Period 4</option>
-</select>
-<input type="time" id="time" />
-<select id="subject"></select>
-<select id="teacher"></select>
-<button onclick="saveTimetable()">SAVE / UPDATE</button>
-</div><div id="list"></div>
-</div>
+</select><input id="subject" placeholder="Subject" />
+<input id="teacher" placeholder="Teacher" /><button onclick="saveTimetable()">SAVE / UPDATE</button>
+
+</div><!-- GRID VIEW --><div class="grid" id="grid"></div></div>
 </div><script>
 
 let currentUser=null;
-let lang="sw";
-let lastTriggered={};
-let audio=null;
+const days=["Monday","Tuesday","Wednesday","Thursday","Friday"];
+const periods=["Period 1","Period 2","Period 3","Period 4"];
 
 function $(id){return document.getElementById(id);}
 
-/* ===== PER USER DATA ===== */
-function getSubjects(){return JSON.parse(localStorage.getItem(currentUser+'_subjects'))||["Physics","History","Biology","Math","Chemistry","English","Kiswahili"]}
-function saveSubjects(data){localStorage.setItem(currentUser+'_subjects',JSON.stringify(data));}
+/* AUTH */
+function register(){let u=$('user').value,p=$('pass').value;if(!u||!p)return;localStorage.setItem('u_'+u,JSON.stringify({user:u,pass:p}));alert('Registered');}
+function login(){let u=$('user').value,p=$('pass').value;let d=JSON.parse(localStorage.getItem('u_'+u));if(d&&d.pass===p){currentUser=u;sessionStorage.setItem('active',u);startApp();}else alert('Wrong login');}
+window.onload=function(){let a=sessionStorage.getItem('active');if(a){currentUser=a;startApp();}}
 
-function getTeachers(){return JSON.parse(localStorage.getItem(currentUser+'_teachers'))||["Denis Maige","Damiani Lushinge","Omari Mniru","Mario Maketa","Method Maginga"]}
-function saveTeachers(data){localStorage.setItem(currentUser+'_teachers',JSON.stringify(data));}
+function startApp(){
+$('auth').classList.add('hidden');
+$('app').classList.remove('hidden');
+loadSchool();renderGrid();}
 
-let masomo=[];
-let walimu=[];
+function logout(){sessionStorage.clear();location.reload();}
 
-/* ===== DROPDOWN ===== */
-function renderDropdown(list=masomo){
-let box=$('subjectDropdown');box.innerHTML="";
-list.forEach(s=>{
-let div=document.createElement('div');div.className='dropdown-item';div.innerText=s;
-div.onclick=()=>{$('newSubject').value=s;toggleDropdown(false)};
-box.appendChild(div);
-});
-}
-function toggleDropdown(show){$('subjectDropdown').style.display=show?'block':'none';}
-function filterSubjects(){let v=$('newSubject').value.toLowerCase();renderDropdown(masomo.filter(s=>s.toLowerCase().includes(v)));toggleDropdown(true);}
-
-/* ===== SUBJECTS ===== */
-function loadSubjects(){masomo=getSubjects();renderSubjects();renderDropdown();loadOptions();}
-function addSubject(){let v=$('newSubject').value.trim();if(!v)return;
-if(!masomo.includes(v))masomo.push(v);
-saveSubjects(masomo);loadSubjects();$('newSubject').value="";}
-function renderSubjects(){let box=$('subjectList');box.innerHTML="";masomo.forEach((s,i)=>{box.innerHTML+=`<div class='card'>${s}<button onclick='delSubject(${i})'>Delete</button></div>`});}
-function delSubject(i){masomo.splice(i,1);saveSubjects(masomo);loadSubjects();}
-
-/* ===== TEACHERS ===== */
-function loadTeachers(){walimu=getTeachers();renderTeachers();loadOptions();}
-function addTeacher(){let v=$('newTeacher').value.trim();if(!v)return;
-if(!walimu.includes(v))walimu.push(v);
-saveTeachers(walimu);loadTeachers();$('newTeacher').value="";}
-function renderTeachers(){let box=$('teacherList');box.innerHTML="";walimu.forEach((t,i)=>{box.innerHTML+=`<div class='card'>${t}<button onclick='delTeacher(${i})'>Delete</button></div>`});}
-function delTeacher(i){walimu.splice(i,1);saveTeachers(walimu);loadTeachers();}
-
-/* ===== SCHOOL ===== */
+/* SCHOOL */
 function loadSchool(){let s=localStorage.getItem(currentUser+'_school')||'NGULIGULI SECONDARY';$('schoolName').innerText=s.toUpperCase();$('schoolInput').value=s;}
 function enableEditSchool(){$('schoolName').style.display='none';$('schoolInput').style.display='block';$('schoolInput').focus();}
 function saveSchoolName(){let v=$('schoolInput').value.trim();if(!v)return;localStorage.setItem(currentUser+'_school',v);loadSchool();$('schoolName').style.display='block';$('schoolInput').style.display='none';}
 
-/* ===== AUTH ===== */
-function showTab(t){$('loginBox').classList.add('hidden');$('registerBox').classList.add('hidden');if(t==='login')$('loginBox').classList.remove('hidden');else $('registerBox').classList.remove('hidden');}
-function register(){let u=$('user').value,p=$('pass').value;if(!u||!p)return;localStorage.setItem('u_'+u,JSON.stringify({user:u,pass:p}));alert('Registered');}
-function login(){let u=$('user').value,p=$('pass').value;let d=JSON.parse(localStorage.getItem('u_'+u));if(d&&d.pass===p){currentUser=u;sessionStorage.setItem('active',u);startApp();}else alert('Wrong login');}
-
-window.onload=function(){showTab('login');let a=sessionStorage.getItem('active');if(a){currentUser=a;startApp();}}
-
-function startApp(){
-$('auth').classList.add('hidden');$('app').classList.remove('hidden');
-loadSchool();loadSubjects();loadTeachers();loadOptions();render();}
-
-function logout(){sessionStorage.clear();location.reload();}
-
-/* ===== OPTIONS ===== */
-function loadOptions(){
-$('subject').innerHTML="";$('teacher').innerHTML="";
-masomo.forEach(m=>$('subject').innerHTML+=`<option>${m}</option>`);
-walimu.forEach(w=>$('teacher').innerHTML+=`<option>${w}</option>`);
+/* SAVE PER CELL */
+function saveTimetable(){
+let key=$('day').value+'_'+$('period').value;
+let obj={form:$('form').value,day:$('day').value,period:$('period').value,subject:$('subject').value,teacher:$('teacher').value};
+localStorage.setItem(currentUser+'_tt_'+key,JSON.stringify(obj));
+renderGrid();showSelected(obj);
 }
 
-/* ===== TIMETABLE ===== */
-function saveTimetable(){let key=$('form').value+'_'+$('day').value+'_'+$('period').value;
-let obj={form:$('form').value,day:$('day').value,period:$('period').value,time:$('time').value,subject:$('subject').value,teacher:$('teacher').value};
-localStorage.setItem(currentUser+'_tt_'+key,JSON.stringify(obj));render();}
-function render(){let html='';for(let i=0;i<localStorage.length;i++){let k=localStorage.key(i);if(k.startsWith(currentUser+'_tt_')){let a=JSON.parse(localStorage.getItem(k));html+=`<div class='card'>${a.form}|${a.day}|${a.period}|${a.time}<br>${a.subject}(${a.teacher})</div>`}}$('list').innerHTML=html;}
+/* GRID RENDER */
+function renderGrid(){
+let html='';
+for(let p=0;p<periods.length;p++){
+for(let d=0;d<days.length;d++){
+let key=days[d]+'_'+periods[p];
+let data=JSON.parse(localStorage.getItem(currentUser+'_tt_'+key)||'null');
+html+=`<div class='cell' onclick="loadCell('${days[d]}','${periods[p]}')">
+<b>${days[d]}</b>
+${periods[p]}<br>
+${data?data.subject+' - '+data.teacher:'Empty'}
+</div>`;
+}
+}
+$('grid').innerHTML=html;
+}
 
-function toggleLang(){lang=lang==='sw'?'en':'sw';$('title').innerText=lang==='sw'?'RATIBA YANGU KWA WIKI':'MY WEEKLY TIMETABLE';}
+function loadCell(day,period){
+let data=JSON.parse(localStorage.getItem(currentUser+'_tt_'+day+'_'+period)||'null');
+$('day').value=day;
+$('period').value=period;
+if(data){$('subject').value=data.subject;$('teacher').value=data.teacher;}else{$('subject').value='';$('teacher').value='';}
+}
+
+function showSelected(a){
+$('selectedView').innerHTML=`<b>${a.day}</b> | ${a.period}<br>${a.subject} - ${a.teacher}`;
+}
 
 </script></body>
-                         </html>
+</html>

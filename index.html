@@ -8,118 +8,113 @@ body{font-family:Arial;margin:0;background:#f4f6fb;}
 .hidden{display:none;}
 .container{padding:15px;}
 input,select,button{padding:10px;margin:5px 0;width:100%;}
-button{cursor:pointer;background:#1e88e5;color:#fff;border:none;border-radius:5px;}
-nav{display:flex;justify-content:space-between;align-items:center;background:#1e88e5;color:#fff;padding:10px;flex-wrap:wrap;}
-.card{background:#fff;padding:10px;margin:10px 0;border-radius:8px;}
+button{cursor:pointer;background:#1e88e5;color:#fff;border:none;border-radius:6px;}
+nav{display:flex;justify-content:space-between;align-items:center;background:#0d47a1;color:#fff;padding:10px;flex-wrap:wrap;}
+.card{background:#fff;padding:10px;margin:10px 0;border-radius:10px;}
+.big{text-transform:uppercase;font-weight:bold;text-align:center;}
+.smallbtn{width:auto;padding:6px 10px;margin:2px;}
 </style>
 </head>
 <body><!-- AUTH --><div id="auth" class="container">
-<h2>Login / Register</h2>
-<input id="name" placeholder="Jina" />
+<h2>LOGIN</h2>
 <input id="user" placeholder="Username" />
 <input id="pass" type="password" placeholder="Password" />
-<button onclick="register()">Register</button>
 <button onclick="login()">Login</button>
 </div><!-- APP --><div id="app" class="hidden"><nav>
-<div><b id="schoolName">Nguliguli Secondary</b></div>
+<div class="big" id="schoolName">NGULIGULI SECONDARY</div>
 <div>
-<button onclick="toggleLang()">Language</button>
-<button onclick="logout()">Logout</button>
+<button class="smallbtn" onclick="toggleLang()">SW/EN</button>
+<button class="smallbtn" onclick="logout()">Logout</button>
 </div>
 </nav><div class="container">
-<h3 id="title">RATIBA YANGU KWA WIKI</h3>
-<input id="editSchool" placeholder="Hariri jina la shule" />
-<button onclick="saveSchool()">Save</button><div class="card">
-<h4>Upload Scheme of Work (PDF)</h4>
-<input type="file" id="scheme" />
-<h4>Upload Lesson Plan (PDF)</h4>
-<input type="file" id="lesson" />
-</div><div class="card">
+<h3 class="big" id="title">RATIBA YANGU KWA WIKI</h3><div class="card">
 <h4>Ratiba</h4><select id="form">
-<option>Form 1</option>
-<option>Form 2</option>
-<option>Form 3</option>
-<option>Form 4</option>
+<option>Form 1</option><option>Form 2</option><option>Form 3</option><option>Form 4</option>
 </select><select id="day">
 <option>Monday</option><option>Tuesday</option><option>Wednesday</option><option>Thursday</option><option>Friday</option>
 </select><select id="period">
 <option>Period 1</option><option>Period 2</option><option>Period 3</option><option>Period 4</option>
-</select><select id="subject"></select> <select id="teacher"></select>
+</select><input type="time" id="time" /><select id="subject"></select> <select id="teacher"></select>
 
-<button onclick="saveTimetable()">Save</button>
+<button onclick="saveTimetable()">SAVE / UPDATE</button>
 
-</div><div id="list"></div></div><script>
+</div><div id="list"></div>
+</div>
+</div><script>
 
-/* DATA */
 const walimu=["Denis Maige","Damiani Lushinge","Omari Mniru","Mario Maketa","Method Maginga"];
 const masomo=["Physics","History","Biology","Math","Chemistry","English","Kiswahili"];
 
 let currentUser=null;
 let lang="sw";
+let audio=null;
 
-/* LOAD DROPDOWNS */
 function loadOptions(){
-let s=document.getElementById('subject');
-let t=document.getElementById('teacher');
-
-s.innerHTML='';
-t.innerHTML='';
-
-masomo.forEach(m=>s.innerHTML+=`<option>${m}</option>`);
-walimu.forEach(w=>t.innerHTML+=`<option>${w}</option>`);
-}
-
-function register(){
-let u={name:document.getElementById('name').value,user:document.getElementById('user').value,pass:document.getElementById('pass').value};
-localStorage.setItem('user_'+u.user,JSON.stringify(u));
-alert('Registered');
+subject.innerHTML="";
+teacher.innerHTML="";
+masomo.forEach(m=>subject.innerHTML+=`<option>${m}</option>`);
+walimu.forEach(w=>teacher.innerHTML+=`<option>${w}</option>`);
 }
 
 function login(){
-let u=document.getElementById('user').value;
-let p=document.getElementById('pass').value;
-let data=JSON.parse(localStorage.getItem('user_'+u));
+let u=user.value;
+let p=pass.value;
+let data=JSON.parse(localStorage.getItem('u_'+u));
 if(data && data.pass===p){
 currentUser=u;
+sessionStorage.setItem('active',u);
+startApp();
+}else alert('Wrong login');
+}
+
+function startApp(){
 document.getElementById('auth').classList.add('hidden');
 document.getElementById('app').classList.remove('hidden');
 loadOptions();
 loadData();
-}else alert('Wrong login');
+requestNotification();
+if(localStorage.getItem(currentUser+'_sound')){
+audio=new Audio(localStorage.getItem(currentUser+'_sound'));
+}
 }
 
 function logout(){
-currentUser=null;
-document.getElementById('auth').classList.remove('hidden');
-document.getElementById('app').classList.add('hidden');
+sessionStorage.clear();
+location.reload();
 }
 
-function saveSchool(){localStorage.setItem(currentUser+'_school',document.getElementById('editSchool').value);}
-
 function saveTimetable(){
-let arr=JSON.parse(localStorage.getItem(currentUser+'_tt')||'[]');
-arr.push({form:form.value,day:day.value,period:period.value,subject:subject.value,teacher:teacher.value});
-localStorage.setItem(currentUser+'_tt',JSON.stringify(arr));
+let key=form.value+'_'+day.value+'_'+period.value;
+let obj={form:form.value,day:day.value,period:period.value,time:time.value,subject:subject.value,teacher:teacher.value};
+localStorage.setItem(currentUser+'_tt_'+key,JSON.stringify(obj));
 render();
 }
 
 function render(){
-let arr=JSON.parse(localStorage.getItem(currentUser+'_tt')||'[]');
 let html='';
-arr.forEach((a,i)=>{
-html+=`<div class='card'>${a.form} - ${a.day} - ${a.period}<br>${a.subject} (${a.teacher}) <button onclick="del(${i})">Delete</button></div>`;
-});
+for(let i=0;i<localStorage.length;i++){
+let k=localStorage.key(i);
+if(k.startsWith(currentUser+'_tt_')){
+let a=JSON.parse(localStorage.getItem(k));
+html+=`<div class='card'>${a.form} | ${a.day} | ${a.period} | ${a.time}<br>${a.subject} (${a.teacher})<button onclick="edit('${k}')">Edit</button></div>`;
+}
+}
 document.getElementById('list').innerHTML=html;
 }
 
-function del(i){
-let arr=JSON.parse(localStorage.getItem(currentUser+'_tt')||'[]');
-arr.splice(i,1);
-localStorage.setItem(currentUser+'_tt',JSON.stringify(arr));
-render();
+function edit(k){
+let a=JSON.parse(localStorage.getItem(k));
+form.value=a.form;
+day.value=a.day;
+period.value=a.period;
+time.value=a.time;
+subject.value=a.subject;
+teacher.value=a.teacher;
 }
 
 function loadData(){
+let sc=localStorage.getItem(currentUser+'_school');
+document.getElementById('schoolName').innerText=(sc||'NGULIGULI SECONDARY').toUpperCase();
 render();
 }
 
@@ -127,6 +122,28 @@ function toggleLang(){
 lang=lang==='sw'?'en':'sw';
 document.getElementById('title').innerText=lang==='sw'?'RATIBA YANGU KWA WIKI':'MY WEEKLY TIMETABLE';
 }
+
+function requestNotification(){
+if(Notification.permission!=='granted') Notification.requestPermission();
+}
+
+setInterval(()=>{
+if(!currentUser) return;
+let now=new Date();
+let t=String(now.getHours()).padStart(2,'0')+":"+String(now.getMinutes()).padStart(2,'0');
+for(let i=0;i<localStorage.length;i++){
+let k=localStorage.key(i);
+if(k.startsWith(currentUser+'_tt_')){
+let a=JSON.parse(localStorage.getItem(k));
+if(a.time===t){
+if(Notification.permission==='granted'){
+new Notification('KIPINDI KINAANZA',{body:a.subject+' - '+a.teacher});
+}
+if(audio){audio.play();}
+}
+}
+}
+},10000);
 
 </script></body>
 </html>
